@@ -64,7 +64,7 @@ jobs:
       - name: Portable ZIP
         shell: pwsh
         run: Compress-Archive -Path app\build\windows\x64\runner\Release\* -DestinationPath dist\Slys_Windows_Portable.zip
-      - uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02 # v4
+      - uses: actions/upload-artifact@cf430e030ddbb5b0abf93d22962f4752f3646cd9 # v7.0.2
         with:
           name: windows
           path: |
@@ -99,7 +99,7 @@ jobs:
           bundle=app/build/linux/x64/release/bundle
           (cd "$bundle" && zip -qr "$GITHUB_WORKSPACE/dist/Slys_Linux.zip" .)
           tar -czf dist/slys-linux-x64.tar.gz -C "$bundle" .
-      - uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02 # v4
+      - uses: actions/upload-artifact@cf430e030ddbb5b0abf93d22962f4752f3646cd9 # v7.0.2
         with:
           name: linux
           path: |
@@ -125,7 +125,7 @@ jobs:
           bundle: Slys.flatpak
           manifest-path: packaging/flatpak/io.github.gugeldot.Slys.yml
           cache-key: flatpak-builder-${{ github.sha }}
-      - uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02 # v4
+      - uses: actions/upload-artifact@cf430e030ddbb5b0abf93d22962f4752f3646cd9 # v7.0.2
         with:
           name: flatpak
           path: Slys.flatpak
