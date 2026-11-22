@@ -161,12 +161,12 @@ fn every_truncation_of_a_seed_is_an_error_and_never_a_panic() {
 
 #[test]
 fn garbage_input_never_panics() {
-    use rand::{Rng, RngCore};
-    let mut rng = rand::thread_rng();
+    use rand::{Rng, RngExt};
+    let mut rng = rand::rng();
     let dir = tempfile::tempdir().unwrap();
     let out = dir.path().join("out");
     for _ in 0..60 {
-        let len = rng.gen_range(0..400);
+        let len = rng.random_range(0..400);
         let mut raw = vec![0u8; len];
         rng.fill_bytes(&mut raw);
         // 1) arbitrary text, 2) valid-looking v2 wrapper around random body, 3) v1-looking base64.

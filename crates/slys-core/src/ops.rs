@@ -10,8 +10,6 @@ use std::fs::{self, File, OpenOptions};
 use std::io::{self, BufReader, BufWriter, Read, Write};
 use std::path::{Path, PathBuf};
 
-use rand::Rng;
-
 use crate::crypto::{KdfParams, MasterKey};
 use crate::error::{Error, Result};
 use crate::format::{self, FragmentEntry, Mode, Payload, MAX_PARTS, MIN_PARTS};
@@ -96,10 +94,15 @@ pub struct RecomposeReport {
 
 fn random_fragment_name() -> String {
     const ALPHABET: &[u8] = b"abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789";
-    let mut rng = rand::rngs::OsRng;
-    let stem: String = (0..16)
-        .map(|_| ALPHABET[rng.gen_range(0..ALPHABET.len())] as char)
-        .collect();
+    // Bytes >= 248 are skipped so that every letter and digit is equally likely (248 = 4 * 62).
+    let mut stem = String::with_capacity(16);
+    while stem.len() < 16 {
+        for b in crate::crypto::random_bytes::<32>() {
+            if b < 248 && stem.len() < 16 {
+                stem.push(ALPHABET[b as usize % ALPHABET.len()] as char);
+            }
+        }
+    }
     format!("{stem}.{FRAGMENT_EXTENSION}")
 }
 

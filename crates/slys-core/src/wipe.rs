@@ -10,8 +10,6 @@ use std::fs::{self, OpenOptions};
 use std::io::{Seek, SeekFrom, Write};
 use std::path::Path;
 
-use rand::RngCore;
-
 use crate::error::Result;
 
 #[derive(Clone, Copy, Debug, PartialEq, Eq)]
@@ -73,7 +71,7 @@ fn overwrite(f: &mut std::fs::File, len: u64, buf: &mut [u8], random: bool) -> s
     while left > 0 {
         let n = left.min(buf.len() as u64) as usize;
         if random {
-            rand::rngs::OsRng.fill_bytes(&mut buf[..n]);
+            crate::crypto::fill_random(&mut buf[..n]);
         } else {
             buf[..n].fill(0);
         }

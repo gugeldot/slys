@@ -13,7 +13,7 @@ use aes::Aes256;
 use base64::{engine::general_purpose::STANDARD, Engine as _};
 use cbc::Decryptor;
 use cipher::block_padding::Pkcs7;
-use cipher::{BlockDecryptMut, KeyIvInit};
+use cipher::{BlockModeDecrypt, KeyIvInit};
 use sha2::Sha256;
 use zeroize::Zeroizing;
 
@@ -45,8 +45,9 @@ fn decrypt(data: &[u8], password: &str) -> Result<Vec<u8>> {
     let mut key = Zeroizing::new([0u8; 32]);
     pbkdf2::pbkdf2_hmac::<Sha256>(password.as_bytes(), salt, ITERATIONS, &mut *key);
     let mut buf = ct.to_vec();
-    let plain = Decryptor::<Aes256>::new((&*key).into(), iv.into())
-        .decrypt_padded_mut::<Pkcs7>(&mut buf)
+    let plain = Decryptor::<Aes256>::new_from_slices(&*key, iv)
+        .map_err(|_| Error::LegacyDecrypt)?
+        .decrypt_padded::<Pkcs7>(&mut buf)
         .map_err(|_| Error::LegacyDecrypt)?;
     Ok(plain.to_vec())
 }

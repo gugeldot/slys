@@ -115,9 +115,16 @@ impl MasterKey {
     }
 }
 
+/// Fills `buf` from the operating system's random source (the same one as before 1.7).
+pub(crate) fn fill_random(buf: &mut [u8]) {
+    use rand::TryRng;
+    rand::rngs::SysRng
+        .try_fill_bytes(buf)
+        .expect("the operating system could not provide random bytes");
+}
+
 pub(crate) fn random_bytes<const N: usize>() -> [u8; N] {
-    use rand::RngCore;
     let mut b = [0u8; N];
-    rand::rngs::OsRng.fill_bytes(&mut b);
+    fill_random(&mut b);
     b
 }
