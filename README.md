@@ -35,7 +35,7 @@ gh attestation verify Slys_Installer.exe --repo gugeldot/slys
 | Windows 10+ | `Slys_Installer.exe` (or `Slys_Windows_Portable.zip`) |
 | Linux | `Slys.flatpak` (`flatpak install --user Slys.flatpak`) or `Slys_Linux.zip` |
 
-macOS is planned.
+macOS is planned (see [docs/RELEASING.md](docs/RELEASING.md)).
 
 ## Use it from the terminal
 

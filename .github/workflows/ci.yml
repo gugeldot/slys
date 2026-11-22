@@ -4,6 +4,7 @@ on:
   push:
     branches: [main]
   pull_request:
+  workflow_dispatch:
   schedule:
     # Weekly: a new advisory can appear against a dependency without any change of ours.
     - cron: "17 5 * * 1"
@@ -113,3 +114,27 @@ jobs:
         run: flutter pub get
       - working-directory: app
         run: flutter build windows --release
+
+  # Does it compile on macOS at all? Unsigned, not packaged, and not required to pass yet: this job
+  # exists to find out what is missing (see docs/RELEASING.md, "macOS").
+  flutter-macos:
+    name: Flutter app (macOS build, experimental)
+    runs-on: macos-latest
+    continue-on-error: true
+    steps:
+      - uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262 # v4
+        with:
+          persist-credentials: false
+      - uses: dtolnay/rust-toolchain@39008827e6b4319a349e9a42dfc90579dd25f1ca # stable
+        with:
+          toolchain: stable
+          targets: aarch64-apple-darwin,x86_64-apple-darwin
+      - uses: Swatinem/rust-cache@d1527c8f67ef9af357290475d4af4b0fab8f12e0 # v2
+      - uses: subosito/flutter-action@1a449444c387b1966244ae4d4f8c696479add0b2 # v2
+        with:
+          channel: stable
+          cache: true
+      - working-directory: app
+        run: flutter pub get
+      - working-directory: app
+        run: flutter build macos --release

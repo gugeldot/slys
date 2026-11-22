@@ -55,7 +55,12 @@ jobs:
         shell: pwsh
         run: |
           $ver = (Select-String -Path Cargo.toml -Pattern '^version = "(.*)"' | Select-Object -First 1).Matches.Groups[1].Value
-          iscc "/DAppVersion=$ver" packaging\windows\slys.iss
+          # Inno Setup is preinstalled on the runner image but is not always on PATH.
+          $iscc = (Get-Command iscc -ErrorAction SilentlyContinue).Source
+          if (-not $iscc) { $iscc = "${env:ProgramFiles(x86)}\Inno Setup 6\ISCC.exe" }
+          if (-not (Test-Path $iscc)) { choco install innosetup -y --no-progress; $iscc = "${env:ProgramFiles(x86)}\Inno Setup 6\ISCC.exe" }
+          & $iscc "/DAppVersion=$ver" packaging\windows\slys.iss
+          if ($LASTEXITCODE -ne 0) { throw "iscc failed" }
       - name: Portable ZIP
         shell: pwsh
         run: Compress-Archive -Path app\build\windows\x64\runner\Release\* -DestinationPath dist\Slys_Windows_Portable.zip
