@@ -1,8 +1,9 @@
 # Inactivity wipe: design
 
-Status: **implemented in the core and the CLI (`slys inactivity ...`), opt-in, disabled by
-default. Not yet exposed in the app UI** (planned for 2.0). Do not describe it as a finished
-feature in user-facing material until the UI ships.
+Status: **implemented in the core, the CLI (`slys inactivity ...`) and the app (Settings →
+Inactivity wipe: a switch and the number of days). Opt-in, disabled by default.** Turning it on
+asks for confirmation and reminds the user to keep a copy of the seeds elsewhere; if it ever
+erases the list, the next start says so.
 
 ## What it is for
 

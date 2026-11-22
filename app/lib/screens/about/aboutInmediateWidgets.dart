@@ -225,9 +225,9 @@ Widget _featuresCard() {
           'Seeds made by SLYS 1.x still work.',
         ),
         _Point(
-          Icons.schedule,
-          'Planned',
-          'Optional wipe of the saved-seeds list after a period of inactivity.',
+          Icons.timer_outlined,
+          'Inactivity wipe (optional)',
+          'In Settings: erase the saved-seeds list after the days you choose without opening SLYS.',
         ),
       ],
     ),

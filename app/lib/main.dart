@@ -6,6 +6,7 @@ import './screens/home/home_screen.dart';
 import './screens/settings/settings.dart';
 import 'utils/app_styles.dart';
 import 'custom/theme.dart';
+import 'services/startup_state.dart';
 import 'src/rust/api/storage.dart';
 import 'src/rust/frb_generated.dart';
 
@@ -15,7 +16,7 @@ void main() async {
 
   // Opt-in inactivity wipe: must run before anything touches the seed list.
   try {
-    inactivityEnforceAndTouch();
+    inactivityWipedAtStartup = inactivityEnforceAndTouch();
   } catch (_) {
     // Never block startup because of the local state file.
   }

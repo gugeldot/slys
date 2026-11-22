@@ -47,4 +47,31 @@ void main() {
       }
     });
   }
+
+  testWidgets('inactivity wipe card is in Settings and asks before turning on', (tester) async {
+    SharedPreferences.setMockInitialValues({});
+    tester.view.physicalSize = const Size(1000, 1400);
+    tester.view.devicePixelRatio = 1.0;
+    addTearDown(tester.view.reset);
+
+    await tester.pumpWidget(
+      ChangeNotifierProvider(create: (_) => ThemeNotifier(), child: const MyWidget()),
+    );
+    await tester.pump(const Duration(seconds: 1));
+    await tester.tap(find.text('Settings').first);
+    await tester.pump(const Duration(milliseconds: 400));
+
+    expect(find.text('Inactivity wipe'), findsOneWidget);
+    final toggle = find.widgetWithText(SwitchListTile, 'Erase saved seeds after inactivity');
+    expect(toggle, findsOneWidget);
+    // Only try turning it on when it is off, so a real configuration is never changed by a test.
+    if (!tester.widget<SwitchListTile>(toggle).value) {
+      await tester.tap(toggle);
+      await tester.pump(const Duration(milliseconds: 400));
+      expect(find.text('Turn on inactivity wipe?'), findsOneWidget);
+      await tester.tap(find.text('Cancel'));
+      await tester.pump(const Duration(milliseconds: 400));
+      expect(tester.widget<SwitchListTile>(toggle).value, isFalse, reason: 'cancel changes nothing');
+    }
+  });
 }

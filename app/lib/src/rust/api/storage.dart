@@ -10,7 +10,7 @@ import 'package:freezed_annotation/freezed_annotation.dart' hide protected;
 part 'storage.freezed.dart';
 
 // These functions are ignored because they are not marked as `pub`: `vault`
-// These function are ignored because they are on traits that is not defined in current crate (put an empty `#[frb]` on it to unignore): `clone`, `clone`, `fmt`, `fmt`
+// These function are ignored because they are on traits that is not defined in current crate (put an empty `#[frb]` on it to unignore): `clone`, `clone`, `clone`, `fmt`, `fmt`, `fmt`
 
 List<SavedSeed> seedsList() => RustLib.instance.api.crateApiStorageSeedsList();
 
@@ -26,6 +26,9 @@ void seedsRename({required String id, required String name}) =>
 InactivityStatus inactivityStatus() =>
     RustLib.instance.api.crateApiStorageInactivityStatus();
 
+InactivitySettings inactivitySettings() =>
+    RustLib.instance.api.crateApiStorageInactivitySettings();
+
 void inactivityConfigure({required bool enabled, required int days}) => RustLib
     .instance
     .api
@@ -34,6 +37,33 @@ void inactivityConfigure({required bool enabled, required int days}) => RustLib
 /// Call once at startup, before anything else. Returns true if the local seed list was wiped.
 bool inactivityEnforceAndTouch() =>
     RustLib.instance.api.crateApiStorageInactivityEnforceAndTouch();
+
+/// What the Settings screen shows: whether it is on, after how many days, and how long is left.
+class InactivitySettings {
+  final bool enabled;
+  final int days;
+
+  /// Whole days until the wipe; `None` when disabled. 0 means "less than a day".
+  final int? daysLeft;
+
+  const InactivitySettings({
+    required this.enabled,
+    required this.days,
+    this.daysLeft,
+  });
+
+  @override
+  int get hashCode => enabled.hashCode ^ days.hashCode ^ daysLeft.hashCode;
+
+  @override
+  bool operator ==(Object other) =>
+      identical(this, other) ||
+      other is InactivitySettings &&
+          runtimeType == other.runtimeType &&
+          enabled == other.enabled &&
+          days == other.days &&
+          daysLeft == other.daysLeft;
+}
 
 @freezed
 sealed class InactivityStatus with _$InactivityStatus {

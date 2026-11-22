@@ -4,7 +4,8 @@ import '../../services/default_paths.dart';
 import '../../services/file_dialogs.dart';
 import '../../utils/app_styles.dart';
 import '../../custom/custom_widgets.dart';
-import '../main/main_fn.dart' show encryptionOptions;
+import '../main/main_fn.dart' show encryptionOptions, SliderWidget;
+import 'inactivity_card.dart';
 import '../../custom/theme.dart';
 import 'package:provider/provider.dart';
 
@@ -194,6 +195,8 @@ class _SettingsScreenState extends State<SettingsScreen> {
           ),
         ),
         const SizedBox(height: 16),
+        const InactivityCard(),
+        const SizedBox(height: 16),
         AppCard(
           title: 'Fragment defaults',
           child: Column(
@@ -248,35 +251,11 @@ class _SettingsScreenState extends State<SettingsScreen> {
                 ),
               ),
               const SizedBox(height: 12),
-              Row(
-                children: [
-                  Text(
-                    'Default pieces',
-                    style: TextStyle(color: AppTheme.white),
-                  ),
-                  Expanded(
-                    child: Slider(
-                      value: fragmentSize.clamp(2, 100).toDouble(),
-                      min: 2,
-                      max: 100,
-                      label: '$fragmentSize',
-                      activeColor: AppTheme.accent,
-                      inactiveColor: AppTheme.grey,
-                      onChanged: (v) => _updateFragmentSize(v.round()),
-                    ),
-                  ),
-                  SizedBox(
-                    width: 32,
-                    child: Text(
-                      '$fragmentSize',
-                      textAlign: TextAlign.end,
-                      style: TextStyle(
-                        color: AppTheme.white,
-                        fontWeight: FontWeight.bold,
-                      ),
-                    ),
-                  ),
-                ],
+              SliderWidget(
+                label: 'Default pieces',
+                currentValue: fragmentSize,
+                onChanged: (v) => setState(() => fragmentSize = v),
+                onChangeEnd: _updateFragmentSize,
               ),
             ],
           ),

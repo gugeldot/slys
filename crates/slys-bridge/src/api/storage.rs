@@ -74,6 +74,31 @@ pub fn inactivity_status() -> Result<InactivityStatus, SlysError> {
     })
 }
 
+/// What the Settings screen shows: whether it is on, after how many days, and how long is left.
+#[derive(Clone, Debug)]
+pub struct InactivitySettings {
+    pub enabled: bool,
+    pub days: u32,
+    /// Whole days until the wipe; `None` when disabled. 0 means "less than a day".
+    pub days_left: Option<u32>,
+}
+
+#[frb(sync)]
+pub fn inactivity_settings() -> Result<InactivitySettings, SlysError> {
+    let i = Inactivity::open_default().map_err(|e| to_error(&e))?;
+    let state = i.state().map_err(|e| to_error(&e))?;
+    let days_left = match i.status().map_err(|e| to_error(&e))? {
+        Status::Disabled => None,
+        Status::Armed { seconds_left } => Some((seconds_left / 86_400) as u32),
+        Status::Expired => Some(0),
+    };
+    Ok(InactivitySettings {
+        enabled: state.enabled,
+        days: state.days,
+        days_left,
+    })
+}
+
 #[frb(sync)]
 pub fn inactivity_configure(enabled: bool, days: u32) -> Result<(), SlysError> {
     Inactivity::open_default()

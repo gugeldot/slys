@@ -7,6 +7,8 @@ import 'package:shared_preferences/shared_preferences.dart';
 import '../../utils/app_styles.dart';
 import '../../utils/utils.dart';
 import '../../services/default_paths.dart';
+import '../../services/operation_runner.dart';
+import '../../services/startup_state.dart';
 import '../settings/settings.dart';
 
 class HomeScreen extends StatefulWidget {
@@ -66,6 +68,16 @@ class _HomeScreenState extends State<HomeScreen> {
     super.initState();
 
     WidgetsBinding.instance.addPostFrameCallback((_) async {
+    if (inactivityWipedAtStartup && mounted) {
+      inactivityWipedAtStartup = false;
+      await showMessage(
+        context,
+        'Saved seeds erased',
+        'SLYS was not opened for the number of days set in the inactivity wipe, so the list of saved '
+        'seeds was erased. Your pieces were not touched. Add a seed again from the Recompose tab '
+        'to rebuild a file.',
+      );
+    }
       final prefs = await SharedPreferences.getInstance();
       setState(() {
         selectedOutputPath = _pathOrDefault(
