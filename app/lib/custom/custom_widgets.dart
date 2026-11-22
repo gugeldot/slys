@@ -3,6 +3,7 @@ import 'dart:io';
 import 'package:desktop_drop/desktop_drop.dart';
 import 'package:flutter/material.dart';
 import '../utils/app_styles.dart';
+import '../utils/password_rules.dart';
 
 /// Width from which the Home screen shows "Fragment" and "Seeds" side by side.
 const double kWideLayout = 980;
@@ -295,6 +296,46 @@ class AdaptiveRow extends StatelessWidget {
           ],
         );
       },
+    );
+  }
+}
+
+
+/// The password requirements, each turning green as it is met.
+class PasswordChecklist extends StatelessWidget {
+  final String password;
+  final String repeat;
+
+  const PasswordChecklist({super.key, required this.password, required this.repeat});
+
+  @override
+  Widget build(BuildContext context) {
+    final green = AppTheme.isDark ? Colors.greenAccent : Colors.green.shade700;
+    return Wrap(
+      spacing: 18,
+      runSpacing: 6,
+      children: [
+        for (final rule in passwordRules)
+          Builder(builder: (context) {
+            final ok = rule.met(password, repeat);
+            return Row(
+              mainAxisSize: MainAxisSize.min,
+              children: [
+                AnimatedSwitcher(
+                  duration: const Duration(milliseconds: 180),
+                  child: Icon(
+                    ok ? Icons.check_circle : Icons.radio_button_unchecked,
+                    key: ValueKey(ok),
+                    size: 18,
+                    color: ok ? green : AppTheme.shadow,
+                  ),
+                ),
+                const SizedBox(width: 6),
+                Text(rule.label, style: TextStyle(color: ok ? green : AppTheme.shadow)),
+              ],
+            );
+          }),
+      ],
     );
   }
 }

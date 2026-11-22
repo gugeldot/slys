@@ -5,6 +5,7 @@ import '../../services/default_paths.dart';
 import '../../services/file_dialogs.dart';
 import '../../custom/custom_widgets.dart';
 import '../../utils/app_styles.dart';
+import '../../utils/password_rules.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 import '../../services/operation_runner.dart';
 import '../../src/rust/api/operations.dart';
@@ -144,7 +145,9 @@ class PasswordAndEncryptionOptions extends StatelessWidget {
             ),
           ],
         ),
-        const SizedBox(height: 14),
+        const SizedBox(height: 12),
+        PasswordChecklist(password: password ?? '', repeat: repeatPassword ?? ''),
+        const SizedBox(height: 16),
         InputDecorator(
           decoration: InputDecoration(
             labelText: 'File encryption',
@@ -214,9 +217,9 @@ class FragButton extends StatelessWidget {
       return 'Choose the file to fragment.';
     if (selectedOutputPath == null || selectedOutputPath!.isEmpty)
       return 'Choose where the pieces go.';
-    if (password == null || password!.trim().isEmpty)
-      return 'Write a password.';
-    if (password != repeatPassword) return 'Repeat the same password.';
+    if (!passwordMeetsRules(password, repeatPassword)) {
+      return 'The password must meet all the requirements.';
+    }
     return null;
   }
 
@@ -300,41 +303,113 @@ class FragButton extends StatelessWidget {
   }
 }
 
-class SliderWidget extends StatelessWidget {
+/// Slider for the number of pieces. Dragging follows the finger; clicking somewhere on the track
+/// makes the thumb glide there and the number counts up or down on the way, instead of jumping.
+class SliderWidget extends StatefulWidget {
   final int currentValue;
   final ValueChanged<int> onChanged;
+
+  /// Called when a drag or a glide finishes (use it to save the value).
+  final ValueChanged<int>? onChangeEnd;
+  final String label;
 
   const SliderWidget({
     super.key,
     required this.currentValue,
     required this.onChanged,
+    this.onChangeEnd,
+    this.label = 'Pieces',
   });
 
   @override
+  State<SliderWidget> createState() => _SliderWidgetState();
+}
+
+class _SliderWidgetState extends State<SliderWidget> with SingleTickerProviderStateMixin {
+  static const double _min = 2, _max = 100;
+
+  late final AnimationController _ctrl = AnimationController(vsync: this);
+  late double _shown = widget.currentValue.clamp(2, 100).toDouble();
+  Animation<double>? _glide;
+  bool _firstChange = false; // first onChanged of the current press
+  bool get _gliding => _ctrl.isAnimating;
+
+  @override
+  void didUpdateWidget(SliderWidget old) {
+    super.didUpdateWidget(old);
+    // The value was changed from outside (e.g. reset to the default): follow it.
+    if (!_gliding && widget.currentValue != _shown.round()) {
+      _shown = widget.currentValue.clamp(2, 100).toDouble();
+    }
+  }
+
+  @override
+  void dispose() {
+    _ctrl.dispose();
+    super.dispose();
+  }
+
+  void _glideTo(double target) {
+    final distance = (target - _shown).abs();
+    _glide = Tween<double>(begin: _shown, end: target)
+        .animate(CurvedAnimation(parent: _ctrl, curve: Curves.easeOutCubic))
+      ..addListener(() {
+        setState(() => _shown = _glide!.value);
+        widget.onChanged(_shown.round());
+      });
+    _ctrl
+      ..duration = Duration(milliseconds: (250 + distance * 6).round().clamp(250, 700))
+      ..forward(from: 0).whenComplete(() {
+        if (!mounted) return;
+        setState(() => _shown = target);
+        widget.onChanged(target.round());
+        widget.onChangeEnd?.call(target.round());
+      });
+  }
+
+  @override
   Widget build(BuildContext context) {
+    final shownInt = _shown.round();
     return Row(
       children: [
-        Text('Pieces', style: TextStyle(color: AppTheme.white)),
+        Text(widget.label, style: TextStyle(color: AppTheme.white)),
         Expanded(
           child: Slider(
-            value: currentValue.clamp(2, 100).toDouble(),
-            min: 2,
-            max: 100,
-            label: '$currentValue',
+            value: _shown,
+            min: _min,
+            max: _max,
+            label: '$shownInt',
             activeColor: AppTheme.accent,
             inactiveColor: AppTheme.grey,
-            onChanged: (v) => onChanged(v.round()),
+            onChangeStart: (_) {
+              _ctrl.stop();
+              _firstChange = true;
+            },
+            onChanged: (v) {
+              if (_gliding) return; // the glide drives the value
+              // Flutter reports the pressed position in the first onChanged. Far from the thumb
+              // means a click on the track: glide there. Close to it is a drag: follow it.
+              if (_firstChange) {
+                _firstChange = false;
+                if ((v - _shown).abs() > 1.5) {
+                  _glideTo(v);
+                  return;
+                }
+              }
+              setState(() => _shown = v);
+              widget.onChanged(v.round());
+            },
+            onChangeEnd: (v) {
+              if (!_gliding) widget.onChangeEnd?.call(v.round());
+            },
           ),
         ),
         SizedBox(
           width: 32,
           child: Text(
-            '$currentValue',
+            '$shownInt',
             textAlign: TextAlign.end,
-            style: TextStyle(
-              color: AppTheme.white,
-              fontWeight: FontWeight.bold,
-            ),
+            style: TextStyle(color: AppTheme.white, fontWeight: FontWeight.bold),
           ),
         ),
       ],
