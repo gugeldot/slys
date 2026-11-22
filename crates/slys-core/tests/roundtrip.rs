@@ -354,3 +354,56 @@ fn legacy_corrupted_fragment_is_an_error_not_garbage() {
     assert!(r.is_err());
     assert_eq!(fs::read_dir(out.path()).unwrap().count(), 0);
 }
+
+#[test]
+fn pieces_can_be_moved_to_any_folder_as_long_as_they_keep_their_names_and_stay_together() {
+    let dir = tempfile::tempdir().unwrap();
+    let (file, data) = sample(dir.path(), "doc.bin", 5000);
+    let made_in = dir.path().join("output");
+    let r = fragment(
+        &file,
+        &made_in,
+        "pw",
+        &opts(Mode::Full, 4),
+        &mut no_progress(),
+    )
+    .unwrap();
+
+    // Move the pieces somewhere else (a different name, even a nested folder), plus unrelated files.
+    let moved = dir.path().join("somewhere").join("else");
+    fs::create_dir_all(&moved).unwrap();
+    for f in &r.fragments {
+        fs::rename(f, moved.join(f.file_name().unwrap())).unwrap();
+    }
+    fs::write(moved.join("holiday.jpg"), b"not a piece").unwrap();
+
+    let out = dir.path().join("out");
+    let rep = recompose(&r.seed, "pw", &moved, &out, &ro(), &mut no_progress()).unwrap();
+    assert_eq!(fs::read(rep.output).unwrap(), data);
+
+    // The old folder is now empty: pointing at it fails and says which piece is missing.
+    let err = recompose(
+        &r.seed,
+        "pw",
+        &made_in,
+        &dir.path().join("out2"),
+        &ro(),
+        &mut no_progress(),
+    )
+    .unwrap_err();
+    assert!(matches!(err, Error::FragmentMissing(_)), "{err:?}");
+
+    // Renaming a piece is the one thing that breaks it: the seed knows the pieces by name.
+    let first = r.fragments[0].file_name().unwrap();
+    fs::rename(moved.join(first), moved.join("renamed.slys")).unwrap();
+    let err = recompose(
+        &r.seed,
+        "pw",
+        &moved,
+        &dir.path().join("out3"),
+        &ro(),
+        &mut no_progress(),
+    )
+    .unwrap_err();
+    assert!(matches!(err, Error::FragmentMissing(_)), "{err:?}");
+}
