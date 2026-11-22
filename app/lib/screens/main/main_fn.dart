@@ -566,17 +566,16 @@ class SeedsTableState extends State<SeedsTable> {
                       style: TextStyle(color: fg, fontWeight: FontWeight.bold),
                     ),
                     const SizedBox(height: 2),
-                    Tooltip(
-                      message: seedData.seed,
-                      child: Text(
-                        seedData.seed,
-                        maxLines: 1,
-                        overflow: TextOverflow.ellipsis,
-                        style: TextStyle(
-                          color: fg.withValues(alpha: 0.8),
-                          fontSize: 12,
-                          fontFamily: 'monospace',
-                        ),
+                    // No tooltip with the whole seed on hover: it covers the page and exposes the
+                    // seed to anyone looking at the screen. Use the copy button to get it.
+                    Text(
+                      seedData.seed,
+                      maxLines: 1,
+                      overflow: TextOverflow.ellipsis,
+                      style: TextStyle(
+                        color: fg.withValues(alpha: 0.8),
+                        fontSize: 12,
+                        fontFamily: 'monospace',
                       ),
                     ),
                   ],
