@@ -8,7 +8,7 @@ import '../../src/rust/api/storage.dart';
 import '../../utils/app_styles.dart';
 
 /// Settings card for the opt-in inactivity wipe: switch, number of days, and what is left.
-/// The rules live in the Rust core (`docs/INACTIVITY_WIPE.md`); this only configures them.
+/// The rules live in the Rust core (`documentation/INACTIVITY_WIPE.md`); this only configures them.
 class InactivityCard extends StatefulWidget {
   const InactivityCard({super.key});
 

@@ -49,7 +49,7 @@ jobs:
           foreach ($d in 'msvcp140.dll','vcruntime140.dll','vcruntime140_1.dll') {
             Copy-Item "C:\Windows\System32\$d" $rel
           }
-      # Code signing: see docs/SIGNING.md. Sign the .exe files before building the installer and
+      # Code signing: see documentation/SIGNING.md. Sign the .exe files before building the installer and
       # the installer itself once a certificate (e.g. SignPath Foundation) is available.
       - name: Installer (Inno Setup)
         shell: pwsh

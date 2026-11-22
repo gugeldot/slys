@@ -3,7 +3,7 @@
 //! What it does: if enabled and the app was not used for N days, the next check securely
 //! deletes the local seed list (`seeds.json`) and the inactivity state.
 //!
-//! What it deliberately does NOT do, and why (see docs/INACTIVITY_WIPE.md):
+//! What it deliberately does NOT do, and why (see documentation/INACTIVITY_WIPE.md):
 //! * It does not touch the fragments. They are encrypted and useless without seed + password,
 //!   which is exactly the protection they already have.
 //! * It does not delete the program. Removing the executable protects nothing.

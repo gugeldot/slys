@@ -1,7 +1,7 @@
 #!/usr/bin/env python3
 """Fill the SHA-256 placeholders in index.html from a release's SHA256SUMS file.
 
-Usage:  python3 site/tools/fill-checksums.py SHA256SUMS
+Usage:  python3 docs/tools/fill-checksums.py SHA256SUMS
 
 SHA256SUMS is the file the Release workflow publishes (lines of "<sha256>  <file name>").
 Windows card <- Slys_Installer.exe, Linux card <- Slys.flatpak and Slys_Linux.zip.

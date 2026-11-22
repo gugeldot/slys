@@ -1,6 +1,6 @@
 # Flatpak manifest. It packages the bundle produced by `flutter build linux --release`
 # (CI builds it first and drops it next to this file as slys-linux-x64.tar.gz).
-# Building Flutter inside flatpak-builder (needed for Flathub) is a later step: see docs/RELEASING.md.
+# Building Flutter inside flatpak-builder (needed for Flathub) is a later step: see documentation/RELEASING.md.
 app-id: io.github.gugeldot.Slys
 runtime: org.gnome.Platform
 runtime-version: '49'

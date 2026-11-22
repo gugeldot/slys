@@ -8,7 +8,7 @@
 //! * [`inactivity`]: opt-in wipe of the local seed list after a period of inactivity.
 //! * [`version`]: build information.
 //!
-//! Security model, file formats and limitations: see `docs/FORMAT.md` and `SECURITY.md`.
+//! Security model, file formats and limitations: see `documentation/FORMAT.md` and `SECURITY.md`.
 
 #![deny(unsafe_code)]
 

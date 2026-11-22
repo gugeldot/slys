@@ -4,7 +4,7 @@
 //! dump or another program of the same user attaching a debugger could read them. So:
 //! * Linux: the process is marked non-dumpable (no core dumps, no `ptrace` by same-user
 //!   processes, `/proc/<pid>/mem` closed) and the core-dump size limit is set to 0.
-//! * Other platforms: nothing here yet (see docs/SECURITY_ARCHITECTURE.md, residual risks).
+//! * Other platforms: nothing here yet (see documentation/SECURITY_ARCHITECTURE.md, residual risks).
 //!
 //! This is the only module in the crate allowed to use `unsafe`.
 

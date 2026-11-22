@@ -30,9 +30,9 @@ password. It does not protect against:
   and mixing fragments of different seeds are detected.
 * The seed carries a SHA-256 for each fragment and for the original; the rebuilt file is verified
   before anything is deleted.
-* Full specification: [docs/FORMAT.md](docs/FORMAT.md).
+* Full specification: [documentation/FORMAT.md](documentation/FORMAT.md).
 * Threat model, adversarial tests, ISO/IEC 27002:2022 control mapping and the list of residual risks:
-  [docs/SECURITY_ARCHITECTURE.md](docs/SECURITY_ARCHITECTURE.md).
+  [documentation/SECURITY_ARCHITECTURE.md](documentation/SECURITY_ARCHITECTURE.md).
 
 ## Known limits (please read)
 
@@ -49,7 +49,7 @@ password. It does not protect against:
   with the names you give them. It is created with owner-only permissions on Unix. It does not
   hide the fact that you use SLYS.
 * **The inactivity wipe** (opt-in, not enabled by default) cannot be tamper-proof. See
-  [docs/INACTIVITY_WIPE.md](docs/INACTIVITY_WIPE.md).
+  [documentation/INACTIVITY_WIPE.md](documentation/INACTIVITY_WIPE.md).
 * **SLYS 1.x seeds** use older cryptography (AES-CBC without authentication, PBKDF2 100k). They are
   supported read-only. Re-fragmenting with 1.6 or later gives you the current protection.
 * **Not audited.** No independent security audit has been done. The code is public so it can be.
@@ -63,5 +63,5 @@ sha256sum -c SHA256SUMS
 gh attestation verify Slys_Installer.exe --repo gugeldot/slys
 ```
 
-Windows binaries are not yet code-signed (see [docs/SIGNING.md](docs/SIGNING.md)), so SmartScreen
+Windows binaries are not yet code-signed (see [documentation/SIGNING.md](documentation/SIGNING.md)), so SmartScreen
 may warn; verifying the checksum is the way to be sure you got the file we built.

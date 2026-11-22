@@ -3,7 +3,7 @@
 
 **Fragment and encrypt your files. Rebuild them with a seed and a password.**
 
-[Website](https://gugeldot.github.io/slys/) · [Download](https://github.com/gugeldot/slys/releases) · [Security](SECURITY.md) · [Format](docs/FORMAT.md)
+[Website](https://gugeldot.github.io/slys/) · [Download](https://github.com/gugeldot/slys/releases) · [Security](SECURITY.md) · [Format](documentation/FORMAT.md)
 </div>
 
 ## What it does
@@ -35,7 +35,7 @@ gh attestation verify Slys_Installer.exe --repo gugeldot/slys
 | Windows 10+ | `Slys_Installer.exe` (or `Slys_Windows_Portable.zip`) |
 | Linux | `Slys.flatpak` (`flatpak install --user Slys.flatpak`) or `Slys_Linux.zip` |
 
-macOS is planned (see [docs/RELEASING.md](docs/RELEASING.md)).
+macOS is planned (see [documentation/RELEASING.md](documentation/RELEASING.md)).
 
 ## Use it from the terminal
 
@@ -55,8 +55,8 @@ cargo test --workspace            # the core and the CLI
 cd app && flutter build linux     # or: flutter build windows
 ```
 
-See [docs/DEVELOPMENT.md](docs/DEVELOPMENT.md) (setup, fast edit loop, tests) and
-[docs/RELEASING.md](docs/RELEASING.md).
+See [documentation/DEVELOPMENT.md](documentation/DEVELOPMENT.md) (setup, fast edit loop, tests) and
+[documentation/RELEASING.md](documentation/RELEASING.md).
 
 ## Honest limits
 

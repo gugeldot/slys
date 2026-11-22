@@ -61,7 +61,7 @@ untrusted byte is handled by memory-safe Rust code; the only wire between them i
 | **T**ampering | Truncate / extend a fragment or seed | Chunk "last" flag, exact size and hash check | `truncating_or_extending_a_fragment_is_detected`, `every_truncation_of_a_seed_is_an_error_and_never_a_panic` |
 | **R**epudiation | n/a (no accounts, no server) | — | — |
 | **I**nformation disclosure | Fragments of a *Full* file | Encrypted + authenticated; random file names; sizes only roughly reveal the file size | `full_mode_leaves_nothing_readable_but_plain_does` |
-| **I**nformation disclosure | Offline password guessing against the seed | Argon2id (64 MiB, t=3) so each guess is expensive; parameters stored in the seed so they can be raised. A weak password is still weak | `docs/FORMAT.md` §2 |
+| **I**nformation disclosure | Offline password guessing against the seed | Argon2id (64 MiB, t=3) so each guess is expensive; parameters stored in the seed so they can be raised. A weak password is still weak | `documentation/FORMAT.md` §2 |
 | **I**nformation disclosure | Secrets left in memory / dumps | `Zeroizing` keys and passwords, decrypted seed payload zeroised, process made non-dumpable on Linux (no core dumps, no same-user ptrace) | `hardening.rs`, `marks_process_non_dumpable` |
 | **I**nformation disclosure | Password on the command line / shell history | CLI refuses passwords in argv (prompt, `--password-stdin`, or env) | `crates/slys-cli` |
 | **D**enial of service | Seed asking for 4 TiB of Argon2 memory | Parameters bounded when *reading* a seed: m ≤ 512 MiB, t ≤ 16, lanes ≤ 16; ciphertext ≤ 16 MiB; ≤ 10 000 fragments; rejected before any KDF work | `hostile_kdf_parameters_are_refused_without_doing_the_work` |

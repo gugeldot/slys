@@ -116,7 +116,7 @@ jobs:
         run: flutter build windows --release
 
   # Does it compile on macOS at all? Unsigned, not packaged, and not required to pass yet: this job
-  # exists to find out what is missing (see docs/RELEASING.md, "macOS").
+  # exists to find out what is missing (see documentation/RELEASING.md, "macOS").
   flutter-macos:
     name: Flutter app (macOS build, experimental)
     runs-on: macos-latest

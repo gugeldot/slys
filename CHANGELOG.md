@@ -9,7 +9,7 @@ Format: [Keep a Changelog](https://keepachangelog.com/). Versions follow [SemVer
   `flutter_rust_bridge`. The separate backend executable and every `Process.start` call are gone;
   passwords no longer travel on a command line.
 - **New seed format (v2)** with a checksum (CRC-32) to catch typos, an authenticated encrypted
-  payload and a SHA-256 for every fragment. See `docs/FORMAT.md`.
+  payload and a SHA-256 for every fragment. See `documentation/FORMAT.md`.
 - **Stronger cryptography:** AES-256-GCM (chunked) instead of AES-256-CBC, Argon2id instead of
   PBKDF2 (100,000 iterations), one key derivation per operation, independent key per fragment.
 - **Default encryption level is now High.** The old default (Mid) left most of the file readable.
@@ -32,7 +32,7 @@ Format: [Keep a Changelog](https://keepachangelog.com/). Versions follow [SemVer
 - Flatpak: no access to `~/.ssh`, `~/.gnupg`, `~/.aws`, `~/.kube`, password store or keyrings.
 - CI: GitHub Actions pinned by commit SHA, `cargo-deny` policy (advisories, licences, no network
   crates), weekly audit, SBOM on releases, fuzz targets, an adversarial test suite.
-- New `docs/SECURITY_ARCHITECTURE.md`: threat model, controls, ISO/IEC 27002:2022 mapping,
+- New `documentation/SECURITY_ARCHITECTURE.md`: threat model, controls, ISO/IEC 27002:2022 mapping,
   residual risks.
 
 ### Interface

@@ -1,4 +1,4 @@
-//! Seed format v2. See docs/FORMAT.md for the byte layout.
+//! Seed format v2. See documentation/FORMAT.md for the byte layout.
 //!
 //! Text form:   `SLYS2.<base64url(body)>.<crc32 as 8 hex digits>`
 //! The CRC only catches typos while copying and pasting. Security comes from the AEAD tag.

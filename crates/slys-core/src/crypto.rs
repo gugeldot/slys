@@ -1,6 +1,6 @@
 //! Key derivation and small crypto helpers.
 //!
-//! Design (see docs/FORMAT.md): the password goes through Argon2id once, giving a master key.
+//! Design (see documentation/FORMAT.md): the password goes through Argon2id once, giving a master key.
 //! Independent subkeys (one for the seed, one per fragment) are derived from it with HKDF-SHA256.
 //! Nothing here is secret except the password: salts, nonces and parameters are public.
 
