@@ -18,28 +18,52 @@ Widget tutorialScreen() {
               title: 'Fragment a file',
               icon: Icons.call_split,
               steps: [
-                _StepData(Icons.insert_drive_file_outlined, 'Pick the file',
-                    'The one you want to protect.'),
-                _StepData(Icons.folder_open_outlined, 'Pick where the pieces go',
-                    'Any folder you like.'),
-                _StepData(Icons.lock_outline, 'Set a password',
-                    'High encryption is recommended. SLYS never stores it.'),
-                _StepData(Icons.bolt, 'Press Slys!',
-                    'You get a seed, saved in the Seeds list.'),
+                _StepData(
+                  Icons.insert_drive_file_outlined,
+                  'Pick the file',
+                  'Browse, or drag it onto the box.',
+                ),
+                _StepData(
+                  Icons.folder_open_outlined,
+                  'Pick where the pieces go',
+                  'By default the Desktop, in a folder called slys_fragments.',
+                ),
+                _StepData(
+                  Icons.lock_outline,
+                  'Set a password',
+                  'High encryption is recommended. SLYS never stores it.',
+                ),
+                _StepData(
+                  Icons.bolt,
+                  'Press Slys!',
+                  'You get a seed, saved in the Recompose tab.',
+                ),
               ],
             ),
             _Flow(
               title: 'Rebuild it',
               icon: Icons.restore,
               steps: [
-                _StepData(Icons.key_outlined, 'Select the seed',
-                    'From the list, or paste it with Add seed.'),
-                _StepData(Icons.folder_copy_outlined, 'Point to the pieces',
-                    'The folder where they are.'),
-                _StepData(Icons.password, 'Enter the password',
-                    'The same one you used to fragment.'),
-                _StepData(Icons.check_circle_outline, 'Press Recompose!',
-                    'The file is checked before the pieces are removed.'),
+                _StepData(
+                  Icons.key_outlined,
+                  'Select the seed',
+                  'In the Recompose tab, or paste it with Add seed.',
+                ),
+                _StepData(
+                  Icons.folder_copy_outlined,
+                  'Point to the pieces',
+                  'The folder where they are (drag it onto the box).',
+                ),
+                _StepData(
+                  Icons.password,
+                  'Enter the password',
+                  'The same one you used to fragment.',
+                ),
+                _StepData(
+                  Icons.check_circle_outline,
+                  'Press Recompose!',
+                  'You choose where to save it (Desktop by default); it is checked before the pieces are removed.',
+                ),
               ],
             ),
           ],
@@ -103,11 +127,20 @@ class _Step extends StatelessWidget {
                   width: 32,
                   height: 32,
                   alignment: Alignment.center,
-                  decoration: BoxDecoration(color: AppTheme.accent, shape: BoxShape.circle),
-                  child: Text('$number',
-                      style: TextStyle(color: AppTheme.onAccent, fontWeight: FontWeight.bold)),
+                  decoration: BoxDecoration(
+                    color: AppTheme.accent,
+                    shape: BoxShape.circle,
+                  ),
+                  child: Text(
+                    '$number',
+                    style: TextStyle(
+                      color: AppTheme.onAccent,
+                      fontWeight: FontWeight.bold,
+                    ),
+                  ),
                 ),
-                if (!last) Expanded(child: Container(width: 2, color: AppTheme.grey)),
+                if (!last)
+                  Expanded(child: Container(width: 2, color: AppTheme.grey)),
               ],
             ),
           ),
@@ -124,9 +157,14 @@ class _Step extends StatelessWidget {
                     child: Column(
                       crossAxisAlignment: CrossAxisAlignment.start,
                       children: [
-                        Text(data.title,
-                            style: TextStyle(
-                                fontWeight: FontWeight.bold, color: AppTheme.white, fontSize: 16)),
+                        Text(
+                          data.title,
+                          style: TextStyle(
+                            fontWeight: FontWeight.bold,
+                            color: AppTheme.white,
+                            fontSize: 16,
+                          ),
+                        ),
                         const SizedBox(height: 2),
                         Text(data.hint, style: minitTextStyle()),
                       ],

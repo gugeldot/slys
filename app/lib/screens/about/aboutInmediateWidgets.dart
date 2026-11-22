@@ -40,9 +40,10 @@ class VersionCard extends StatelessWidget {
       v = versionInfo();
     } catch (_) {}
     final known = v != null && v.commit != 'unknown';
-    final summary = v == null
-        ? 'SLYS (version unavailable)'
-        : 'SLYS ${v.version}${known ? ' · ${v.commit}' : ''} · seed format ${v.seedFormat}';
+    final summary =
+        v == null
+            ? 'SLYS (version unavailable)'
+            : 'SLYS ${v.version}${known ? ' · ${v.commit}' : ''} · seed format ${v.seedFormat}';
 
     return AppCard(
       title: 'SLYS',
@@ -53,7 +54,10 @@ class VersionCard extends StatelessWidget {
           await Clipboard.setData(ClipboardData(text: summary));
           if (context.mounted) {
             ScaffoldMessenger.of(context).showSnackBar(
-              const SnackBar(content: Text('Version info copied'), duration: Duration(seconds: 2)),
+              const SnackBar(
+                content: Text('Version info copied'),
+                duration: Duration(seconds: 2),
+              ),
             );
           }
         },
@@ -61,8 +65,10 @@ class VersionCard extends StatelessWidget {
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          Text('Fragment and encrypt your files. Rebuild them with a seed and a password.',
-              style: minitTextStyle()),
+          Text(
+            'Fragment and encrypt your files. Rebuild them with a seed and a password.',
+            style: minitTextStyle(),
+          ),
           const SizedBox(height: 14),
           Wrap(
             spacing: 10,
@@ -70,8 +76,16 @@ class VersionCard extends StatelessWidget {
             children: [
               _InfoChip(Icons.sell_outlined, 'Version', v?.version ?? '?'),
               if (known) _InfoChip(Icons.commit, 'Build', v.commit),
-              _InfoChip(Icons.key_outlined, 'Seed format', v == null ? '?' : 'v${v.seedFormat}'),
-              const _InfoChip(Icons.balance_outlined, 'License', 'GPL-3.0-or-later'),
+              _InfoChip(
+                Icons.key_outlined,
+                'Seed format',
+                v == null ? '?' : 'v${v.seedFormat}',
+              ),
+              const _InfoChip(
+                Icons.balance_outlined,
+                'License',
+                'GPL-3.0-or-later',
+              ),
             ],
           ),
         ],
@@ -103,9 +117,17 @@ class _InfoChip extends StatelessWidget {
           Column(
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
-              Text(label, style: TextStyle(fontSize: 11, color: AppTheme.shadow)),
-              SelectableText(value,
-                  style: TextStyle(fontWeight: FontWeight.bold, color: AppTheme.white)),
+              Text(
+                label,
+                style: TextStyle(fontSize: 11, color: AppTheme.shadow),
+              ),
+              SelectableText(
+                value,
+                style: TextStyle(
+                  fontWeight: FontWeight.bold,
+                  color: AppTheme.white,
+                ),
+              ),
             ],
           ),
         ],
@@ -134,7 +156,13 @@ class _Point extends StatelessWidget {
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
-                Text(title, style: TextStyle(fontWeight: FontWeight.bold, color: AppTheme.white)),
+                Text(
+                  title,
+                  style: TextStyle(
+                    fontWeight: FontWeight.bold,
+                    color: AppTheme.white,
+                  ),
+                ),
                 const SizedBox(height: 2),
                 Text(text, style: minitTextStyle()),
               ],
@@ -151,12 +179,21 @@ Widget _whyCard() {
     title: 'Why',
     child: Column(
       children: const [
-        _Point(Icons.visibility_off_outlined, 'Your files, your control',
-            'Pieces are useless on their own: nobody can read them without your password.'),
-        _Point(Icons.vpn_key_outlined, 'Three things to rebuild',
-            'The pieces, the seed and the password. Lose one and the file is gone.'),
-        _Point(Icons.restore, 'Reinstall any time',
-            'Install SLYS again, enter the seed and the password, and your file is back.'),
+        _Point(
+          Icons.visibility_off_outlined,
+          'Your files, your control',
+          'Pieces are useless on their own: nobody can read them without your password.',
+        ),
+        _Point(
+          Icons.vpn_key_outlined,
+          'Three things to rebuild',
+          'The pieces, the seed and the password. Lose one and the file is gone.',
+        ),
+        _Point(
+          Icons.restore,
+          'Reinstall any time',
+          'Install SLYS again, enter the seed and the password, and your file is back.',
+        ),
       ],
     ),
   );
@@ -167,16 +204,31 @@ Widget _featuresCard() {
     title: 'What it does',
     child: Column(
       children: const [
-        _Point(Icons.call_split, 'Fragments and encrypts',
-            'AES-256-GCM, with the key derived from your password using Argon2id.'),
-        _Point(Icons.fact_check_outlined, 'Detects any change',
-            'Edited, missing, reordered or swapped pieces are reported; nothing is rebuilt wrongly.'),
-        _Point(Icons.verified_outlined, 'Verifies before deleting',
-            'The original is removed only after the pieces are proven to rebuild it.'),
-        _Point(Icons.history, 'Reads old seeds',
-            'Seeds made by SLYS 1.x still work.'),
-        _Point(Icons.schedule, 'Planned',
-            'Optional wipe of the saved-seeds list after a period of inactivity.'),
+        _Point(
+          Icons.call_split,
+          'Fragments and encrypts',
+          'AES-256-GCM, with the key derived from your password using Argon2id.',
+        ),
+        _Point(
+          Icons.fact_check_outlined,
+          'Detects any change',
+          'Edited, missing, reordered or swapped pieces are reported; nothing is rebuilt wrongly.',
+        ),
+        _Point(
+          Icons.verified_outlined,
+          'Verifies before deleting',
+          'The original is removed only after the pieces are proven to rebuild it.',
+        ),
+        _Point(
+          Icons.history,
+          'Reads old seeds',
+          'Seeds made by SLYS 1.x still work.',
+        ),
+        _Point(
+          Icons.schedule,
+          'Planned',
+          'Optional wipe of the saved-seeds list after a period of inactivity.',
+        ),
       ],
     ),
   );
@@ -197,8 +249,14 @@ Widget _legalCard() {
         collapsedIconColor: AppTheme.white,
         tilePadding: const EdgeInsets.symmetric(horizontal: 16),
         childrenPadding: const EdgeInsets.fromLTRB(16, 0, 16, 16),
-        title: Text('Legal notice',
-            style: TextStyle(fontSize: 19, fontWeight: FontWeight.bold, color: AppTheme.white)),
+        title: Text(
+          'Legal notice',
+          style: TextStyle(
+            fontSize: 19,
+            fontWeight: FontWeight.bold,
+            color: AppTheme.white,
+          ),
+        ),
         expandedCrossAxisAlignment: CrossAxisAlignment.start,
         children: [
           Text(
@@ -224,7 +282,8 @@ Widget _legalCard() {
 Widget paypalButton() {
   return Center(
     child: PayPalDonateButton(
-      donationUrl: "https://www.paypal.com/donate/?hosted_button_id=HKANXJYJZND7G",
+      donationUrl:
+          "https://www.paypal.com/donate/?hosted_button_id=HKANXJYJZND7G",
     ),
   );
 }

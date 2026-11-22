@@ -40,7 +40,7 @@ void main() {
         ChangeNotifierProvider(create: (_) => ThemeNotifier(), child: const MyWidget()),
       );
       await tester.pump(const Duration(seconds: 1));
-      for (final tab in ['Home', 'Settings', 'Tutorial', 'About']) {
+      for (final tab in ['Fragment', 'Recompose', 'Settings', 'Tutorial', 'About']) {
         await tester.tap(find.text(tab).first);
         await tester.pump(const Duration(milliseconds: 300));
         expect(tester.takeException(), isNull, reason: '$tab at $size');

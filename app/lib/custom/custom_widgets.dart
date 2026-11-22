@@ -1,3 +1,6 @@
+import 'dart:io';
+
+import 'package:desktop_drop/desktop_drop.dart';
 import 'package:flutter/material.dart';
 import '../utils/app_styles.dart';
 
@@ -76,14 +79,21 @@ ButtonStyle primaryButtonStyle() {
   );
 }
 
+/// What a [PathRow] accepts when something is dropped on it.
+enum DropKind { file, directory }
+
 /// "Label" on top, then the chosen path (shortened with … if it does not fit) and a Browse button.
-/// Works the same at any width.
-class PathRow extends StatelessWidget {
+/// You can also drag a file or folder from the file manager onto it. Works the same at any width.
+class PathRow extends StatefulWidget {
   final String label;
   final String? value;
   final String placeholder;
   final VoidCallback? onBrowse;
   final Widget? extra;
+
+  /// Called with the dropped path (already checked to be of [dropKind]). Null disables dropping.
+  final ValueChanged<String>? onDrop;
+  final DropKind dropKind;
 
   const PathRow({
     super.key,
@@ -92,53 +102,103 @@ class PathRow extends StatelessWidget {
     required this.placeholder,
     required this.onBrowse,
     this.extra,
+    this.onDrop,
+    this.dropKind = DropKind.file,
   });
 
   @override
+  State<PathRow> createState() => _PathRowState();
+}
+
+class _PathRowState extends State<PathRow> {
+  bool _hovering = false;
+
+  void _dropped(DropDoneDetails d) {
+    setState(() => _hovering = false);
+    if (widget.onDrop == null || d.files.isEmpty) return;
+    final path = d.files.first.path;
+    final wantFile = widget.dropKind == DropKind.file;
+    final ok =
+        wantFile
+            ? FileSystemEntity.isFileSync(path)
+            : FileSystemEntity.isDirectorySync(path);
+    if (!ok) {
+      ScaffoldMessenger.maybeOf(context)?.showSnackBar(
+        SnackBar(
+          content: Text(
+            wantFile
+                ? 'Drop a file, not a folder.'
+                : 'Drop a folder, not a file.',
+          ),
+          duration: const Duration(seconds: 3),
+        ),
+      );
+      return;
+    }
+    widget.onDrop!(path);
+  }
+
+  @override
   Widget build(BuildContext context) {
-    final has = value != null && value!.isNotEmpty;
-    return Column(
+    final has = widget.value != null && widget.value!.isNotEmpty;
+    final canDrop = widget.onDrop != null;
+    final hint =
+        canDrop
+            ? '${widget.placeholder}, or drop ${widget.dropKind == DropKind.file ? 'a file' : 'a folder'} here'
+            : widget.placeholder;
+    final field = Container(
+      height: 44,
+      alignment: Alignment.centerLeft,
+      padding: const EdgeInsets.symmetric(horizontal: 12),
+      decoration: BoxDecoration(
+        color: _hovering ? AppTheme.accent.withValues(alpha: 0.15) : null,
+        border: Border.all(
+          color: _hovering ? AppTheme.accent : AppTheme.grey,
+          width: _hovering ? 2 : 1,
+        ),
+        borderRadius: BorderRadius.circular(8),
+      ),
+      child: Text(
+        _hovering ? 'Drop it here' : (has ? widget.value! : hint),
+        maxLines: 1,
+        overflow: TextOverflow.ellipsis,
+        style: TextStyle(
+          color: has || _hovering ? AppTheme.white : AppTheme.shadow,
+        ),
+      ),
+    );
+
+    final content = Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
         Text(
-          label,
+          widget.label,
           style: TextStyle(fontWeight: FontWeight.bold, color: AppTheme.white),
         ),
         const SizedBox(height: 6),
         Row(
           children: [
             Expanded(
-              child: Tooltip(
-                message: has ? value! : '',
-                child: Container(
-                  height: 44,
-                  alignment: Alignment.centerLeft,
-                  padding: const EdgeInsets.symmetric(horizontal: 12),
-                  decoration: BoxDecoration(
-                    border: Border.all(color: AppTheme.grey),
-                    borderRadius: BorderRadius.circular(8),
-                  ),
-                  child: Text(
-                    has ? value! : placeholder,
-                    maxLines: 1,
-                    overflow: TextOverflow.ellipsis,
-                    style: TextStyle(
-                      color: has ? AppTheme.white : AppTheme.shadow,
-                    ),
-                  ),
-                ),
-              ),
+              child: Tooltip(message: has ? widget.value! : '', child: field),
             ),
             const SizedBox(width: 8),
             OutlinedButton(
               style: secondaryButtonStyle(),
-              onPressed: onBrowse,
+              onPressed: widget.onBrowse,
               child: const Text('Browse'),
             ),
-            if (extra != null) extra!,
+            if (widget.extra != null) widget.extra!,
           ],
         ),
       ],
+    );
+
+    if (!canDrop) return content;
+    return DropTarget(
+      onDragEntered: (_) => setState(() => _hovering = true),
+      onDragExited: (_) => setState(() => _hovering = false),
+      onDragDone: _dropped,
+      child: content,
     );
   }
 }

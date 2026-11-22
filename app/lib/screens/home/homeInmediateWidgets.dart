@@ -1,4 +1,3 @@
-
 import 'package:flutter/material.dart';
 
 import '../about/aboutInmediateWidgets.dart';
@@ -20,7 +19,7 @@ Widget getTabContent({
   required TextEditingController passwordController,
   required int fragmentSize,
   required ValueChanged<int> onFragmentSizeChanged,
-  
+
   // 👇 NUEVO
   required String? selectedSeed,
   required int? selectedSeedIndex,
@@ -28,17 +27,17 @@ Widget getTabContent({
   required String? recomposePassword,
   required TextEditingController recomposePasswordController,
   required void Function(String) onRecomposePasswordChanged,
-    required String? recomposeOutputPath,
+  required String? recomposeOutputPath,
   required void Function(String path) onRecomposeOutputPathSelected,
 
   required String? repeatPassword,
   required TextEditingController repeatPasswordController,
   required void Function(String path) onRepeatPasswordChanged,
-})
- {
-    switch (selectedTabIndex) {
-      case 0:
-        return mainScreen(
+}) {
+  switch (selectedTabIndex) {
+    case 0:
+      return _page(
+        fragmentScreen(
           selectedFilePath: selectedFilePath,
           onFileSelected: onFileSelected,
           selectedOutputPath: selectedOutputPath,
@@ -50,7 +49,14 @@ Widget getTabContent({
           passwordController: passwordController,
           fragmentSize: fragmentSize,
           onFragmentSizeChanged: onFragmentSizeChanged,
-
+          repeatPassword: repeatPassword,
+          repeatPasswordController: repeatPasswordController,
+          onRepeatPasswordChanged: onRepeatPasswordChanged,
+        ),
+      );
+    case 1:
+      return _page(
+        recomposeScreen(
           selectedSeed: selectedSeed,
           selectedSeedIndex: selectedSeedIndex,
           onSeedSelected: onSeedSelected,
@@ -59,29 +65,27 @@ Widget getTabContent({
           onRecomposePasswordChanged: onRecomposePasswordChanged,
           recomposeOutputPath: recomposeOutputPath,
           onRecomposeOutputPathSelected: onRecomposeOutputPathSelected,
-          repeatPassword: repeatPassword,
-          repeatPasswordController: repeatPasswordController,
-          onRepeatPasswordChanged:onRepeatPasswordChanged,
-          
-        );
-
-
-      case 1:
-        return _page(const SettingsScreen());
-      case 2:
-        return _page(tutorialScreen());
-      case 3:
-        return _page(aboutScreen());
-      default:
-        return Container();
-    }
+        ),
+      );
+    case 2:
+      return _page(const SettingsScreen());
+    case 3:
+      return _page(tutorialScreen());
+    case 4:
+      return _page(aboutScreen());
+    default:
+      return Container();
   }
+}
 
 /// Reading pages (settings, tutorial, about) stay centred and not wider than 860 px.
 Widget _page(Widget child) {
   return Align(
     alignment: Alignment.topCenter,
-    child: ConstrainedBox(constraints: const BoxConstraints(maxWidth: 860), child: child),
+    child: ConstrainedBox(
+      constraints: const BoxConstraints(maxWidth: 860),
+      child: child,
+    ),
   );
 }
 
@@ -95,7 +99,9 @@ Widget appHeader() {
     child: Row(
       children: [
         Image.asset(
-          AppTheme.isDark ? 'assets/images/logo_inv.png' : 'assets/images/logo.png',
+          AppTheme.isDark
+              ? 'assets/images/logo_inv.png'
+              : 'assets/images/logo.png',
           height: 36,
           width: 36,
         ),
@@ -105,7 +111,11 @@ Widget appHeader() {
             'Slys Desktop',
             maxLines: 1,
             overflow: TextOverflow.ellipsis,
-            style: TextStyle(fontSize: 18, fontWeight: FontWeight.w600, color: AppTheme.white),
+            style: TextStyle(
+              fontSize: 18,
+              fontWeight: FontWeight.w600,
+              color: AppTheme.white,
+            ),
           ),
         ),
       ],

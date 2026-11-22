@@ -57,7 +57,7 @@ void main() {
       expect(tester.takeException(), isNull);
       await expectLater(find.byType(MaterialApp), matchesGoldenFile('shots/home_${e.key}.png'));
 
-      for (final tab in ['Settings', 'Tutorial', 'About']) {
+      for (final tab in ['Recompose', 'Settings', 'Tutorial', 'About']) {
         await tester.tap(find.text(tab).first);
         await tester.pumpAndSettle();
         expect(tester.takeException(), isNull, reason: '$tab at ${e.key}');

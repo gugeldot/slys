@@ -36,6 +36,14 @@ Format: [Keep a Changelog](https://keepachangelog.com/). Versions follow [SemVer
   residual risks.
 
 ### Interface
+- Fragment and Recompose are separate tabs.
+- Drag a file (or folder) from the file manager onto the Target file, Output folder and
+  "Where are the pieces?" boxes instead of using Browse.
+- The output folder defaults to `<Desktop>/slys_fragments` (the Desktop folder is looked up per
+  language and OS); the same folder is the default for finding the pieces when rebuilding.
+- Recompose always asks where to save the rebuilt file; the dialog opens on the Desktop (or the
+  folder set in Settings).
+- New fragmentations use 10 pieces by default (was 5); a number you saved in Settings is kept.
 - About now holds the version (version, build commit, seed format, licence, with a button that copies them
   for bug reports) and is much shorter; the legal notice is folded. The version is no longer in the header.
 - The tutorial is two illustrated step-by-step flows (fragment, rebuild) plus a reminder, instead of text.

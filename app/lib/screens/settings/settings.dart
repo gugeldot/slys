@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:shared_preferences/shared_preferences.dart';
+import '../../services/default_paths.dart';
 import '../../services/file_dialogs.dart';
 import '../../utils/app_styles.dart';
 import '../../custom/custom_widgets.dart';
@@ -7,10 +8,12 @@ import '../main/main_fn.dart' show encryptionOptions;
 import '../../custom/theme.dart';
 import 'package:provider/provider.dart';
 
-
 const String kSelectedOutputPathKey = 'selectedOutputPath';
 const String kRecomposeOutputPathKey = 'selectedRecomposeOutputPath';
 const String kFragmentSizeKey = 'fragmentSize';
+
+/// Pieces a new fragmentation uses unless the user picked another number.
+const int kDefaultPieces = 10;
 const String kEncryptionLevelKey = 'encryptionLevel';
 const String kEndOutputRecomopose = 'endOutputRecomopose';
 const String kIsDarkModeKey = 'isDarkMode';
@@ -28,12 +31,18 @@ class _SettingsScreenState extends State<SettingsScreen> {
   String? recomposeOutputPath;
   String? endOutputRecomopose;
 
-  int fragmentSize = 5;
+  int fragmentSize = kDefaultPieces;
   String encryptionLevel = 'Total';
 
   String accentColor = 'Purple';
 
-  final List<String> accentOptions = ['Yellow', 'Red', 'Green', 'Purple', 'Blue'];
+  final List<String> accentOptions = [
+    'Yellow',
+    'Red',
+    'Green',
+    'Purple',
+    'Blue',
+  ];
 
   @override
   void initState() {
@@ -47,16 +56,17 @@ class _SettingsScreenState extends State<SettingsScreen> {
       selectedOutputPath = prefs.getString(kSelectedOutputPathKey);
       recomposeOutputPath = prefs.getString(kRecomposeOutputPathKey);
       endOutputRecomopose = prefs.getString(kEndOutputRecomopose);
-      fragmentSize = prefs.getInt(kFragmentSizeKey) ?? 5;
+      fragmentSize = prefs.getInt(kFragmentSizeKey) ?? kDefaultPieces;
       encryptionLevel = prefs.getString(kEncryptionLevelKey) ?? 'Total';
       AppTheme.isDark = prefs.getBool(kIsDarkModeKey) ?? true;
       accentColor = prefs.getString(kAccentColorKey) ?? 'Purple';
-
-
     });
   }
 
-  Future<void> _updatePath(String key, void Function(String?) setStateCallback) async {
+  Future<void> _updatePath(
+    String key,
+    void Function(String?) setStateCallback,
+  ) async {
     String? path = await pickDirectoryPath();
     if (path != null) {
       final prefs = await SharedPreferences.getInstance();
@@ -92,7 +102,6 @@ class _SettingsScreenState extends State<SettingsScreen> {
         await prefs.remove(key);
         onCleared();
       },
-      
     );
   }
 
@@ -100,11 +109,17 @@ class _SettingsScreenState extends State<SettingsScreen> {
     return (value == null || value.isEmpty) ? 'No path selected' : value;
   }
 
-  Widget _pathSetting(String label, String? value, String key, void Function(String?) set) {
+  Widget _pathSetting(
+    String label,
+    String? value,
+    String key,
+    void Function(String?) set, {
+    String placeholder = 'Not set (Slys will ask each time)',
+  }) {
     return PathRow(
       label: label,
       value: value,
-      placeholder: 'Not set (Slys will ask each time)',
+      placeholder: placeholder,
       onBrowse: () => _updatePath(key, set),
       extra: buildClearButton(key, () => setState(() => set(''))),
     );
@@ -123,7 +138,10 @@ class _SettingsScreenState extends State<SettingsScreen> {
             children: [
               SwitchListTile(
                 contentPadding: EdgeInsets.zero,
-                title: Text('Dark mode', style: TextStyle(color: AppTheme.white)),
+                title: Text(
+                  'Dark mode',
+                  style: TextStyle(color: AppTheme.white),
+                ),
                 value: isDarkMode,
                 activeColor: AppTheme.accent,
                 onChanged: (val) async {
@@ -139,17 +157,28 @@ class _SettingsScreenState extends State<SettingsScreen> {
                   labelStyle: TextStyle(color: AppTheme.shadow),
                   isDense: true,
                   border: const OutlineInputBorder(),
-                  contentPadding: const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
+                  contentPadding: const EdgeInsets.symmetric(
+                    horizontal: 12,
+                    vertical: 6,
+                  ),
                 ),
                 child: DropdownButtonHideUnderline(
                   child: DropdownButton<String>(
                     isExpanded: true,
                     value: accentColor,
                     dropdownColor: AppTheme.grey2,
-                    style: Theme.of(context).textTheme.bodyLarge?.copyWith(color: AppTheme.white),
-                    items: accentOptions
-                        .map((opt) => DropdownMenuItem<String>(value: opt, child: Text(opt)))
-                        .toList(),
+                    style: Theme.of(
+                      context,
+                    ).textTheme.bodyLarge?.copyWith(color: AppTheme.white),
+                    items:
+                        accentOptions
+                            .map(
+                              (opt) => DropdownMenuItem<String>(
+                                value: opt,
+                                child: Text(opt),
+                              ),
+                            )
+                            .toList(),
                     onChanged: (value) async {
                       if (value == null) return;
                       final prefs = await SharedPreferences.getInstance();
@@ -172,8 +201,13 @@ class _SettingsScreenState extends State<SettingsScreen> {
             children: [
               Text('Changes apply instantly.', style: minitTextStyle()),
               const SizedBox(height: 14),
-              _pathSetting('Default output folder', selectedOutputPath, kSelectedOutputPathKey,
-                  (p) => selectedOutputPath = p),
+              _pathSetting(
+                'Default output folder',
+                selectedOutputPath,
+                kSelectedOutputPathKey,
+                (p) => selectedOutputPath = p,
+                placeholder: 'Default: ${defaultFragmentsDir()}',
+              ),
               const SizedBox(height: 16),
               InputDecorator(
                 decoration: InputDecoration(
@@ -181,18 +215,34 @@ class _SettingsScreenState extends State<SettingsScreen> {
                   labelStyle: TextStyle(color: AppTheme.shadow),
                   isDense: true,
                   border: const OutlineInputBorder(),
-                  contentPadding: const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
+                  contentPadding: const EdgeInsets.symmetric(
+                    horizontal: 12,
+                    vertical: 6,
+                  ),
                 ),
                 child: DropdownButtonHideUnderline(
                   child: DropdownButton<String>(
                     isExpanded: true,
-                    value: encryptionOptions.containsKey(encryptionLevel) ? encryptionLevel : 'Total',
+                    value:
+                        encryptionOptions.containsKey(encryptionLevel)
+                            ? encryptionLevel
+                            : 'Total',
                     dropdownColor: AppTheme.grey2,
-                    style: Theme.of(context).textTheme.bodyLarge?.copyWith(color: AppTheme.white),
-                    items: encryptionOptions.entries
-                        .map((e) => DropdownMenuItem<String>(
-                            value: e.key, child: Text(e.value, overflow: TextOverflow.ellipsis)))
-                        .toList(),
+                    style: Theme.of(
+                      context,
+                    ).textTheme.bodyLarge?.copyWith(color: AppTheme.white),
+                    items:
+                        encryptionOptions.entries
+                            .map(
+                              (e) => DropdownMenuItem<String>(
+                                value: e.key,
+                                child: Text(
+                                  e.value,
+                                  overflow: TextOverflow.ellipsis,
+                                ),
+                              ),
+                            )
+                            .toList(),
                     onChanged: _updateEncryptionLevel,
                   ),
                 ),
@@ -200,13 +250,15 @@ class _SettingsScreenState extends State<SettingsScreen> {
               const SizedBox(height: 12),
               Row(
                 children: [
-                  Text('Default pieces', style: TextStyle(color: AppTheme.white)),
+                  Text(
+                    'Default pieces',
+                    style: TextStyle(color: AppTheme.white),
+                  ),
                   Expanded(
                     child: Slider(
                       value: fragmentSize.clamp(2, 100).toDouble(),
                       min: 2,
                       max: 100,
-                      divisions: 98,
                       label: '$fragmentSize',
                       activeColor: AppTheme.accent,
                       inactiveColor: AppTheme.grey,
@@ -215,9 +267,14 @@ class _SettingsScreenState extends State<SettingsScreen> {
                   ),
                   SizedBox(
                     width: 32,
-                    child: Text('$fragmentSize',
-                        textAlign: TextAlign.end,
-                        style: TextStyle(color: AppTheme.white, fontWeight: FontWeight.bold)),
+                    child: Text(
+                      '$fragmentSize',
+                      textAlign: TextAlign.end,
+                      style: TextStyle(
+                        color: AppTheme.white,
+                        fontWeight: FontWeight.bold,
+                      ),
+                    ),
                   ),
                 ],
               ),
@@ -232,11 +289,21 @@ class _SettingsScreenState extends State<SettingsScreen> {
             children: [
               Text('Changes apply instantly.', style: minitTextStyle()),
               const SizedBox(height: 14),
-              _pathSetting('Default folder with the pieces', recomposeOutputPath, kRecomposeOutputPathKey,
-                  (p) => recomposeOutputPath = p),
+              _pathSetting(
+                'Default folder with the pieces',
+                recomposeOutputPath,
+                kRecomposeOutputPathKey,
+                (p) => recomposeOutputPath = p,
+                placeholder: 'Default: ${defaultFragmentsDir()}',
+              ),
               const SizedBox(height: 16),
-              _pathSetting('Default folder for the rebuilt file', endOutputRecomopose, kEndOutputRecomopose,
-                  (p) => endOutputRecomopose = p),
+              _pathSetting(
+                'Where the folder dialog opens for the rebuilt file',
+                endOutputRecomopose,
+                kEndOutputRecomopose,
+                (p) => endOutputRecomopose = p,
+                placeholder: 'Default: your Desktop (${desktopDir()})',
+              ),
             ],
           ),
         ),

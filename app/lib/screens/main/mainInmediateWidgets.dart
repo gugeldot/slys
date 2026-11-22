@@ -1,8 +1,11 @@
+import 'dart:io';
+
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 
 import '../../custom/custom_widgets.dart';
+import '../../services/default_paths.dart';
 import '../../services/file_dialogs.dart';
 import '../../utils/app_styles.dart';
 import '../settings/settings.dart';
@@ -11,8 +14,8 @@ import 'main_fn.dart';
 final ScrollController scrollController = ScrollController();
 final GlobalKey<SeedsTableState> seedsTableKey = GlobalKey<SeedsTableState>();
 
-/// Home screen. Two columns (Fragment | Seeds) when the window is wide, stacked when it is not.
-Widget mainScreen({
+/// Fragment tab: one centred card.
+Widget fragmentScreen({
   required String? selectedFilePath,
   required void Function(String path) onFileSelected,
   required String? selectedOutputPath,
@@ -24,28 +27,26 @@ Widget mainScreen({
   required TextEditingController passwordController,
   required int fragmentSize,
   required ValueChanged<int> onFragmentSizeChanged,
-  required String? selectedSeed,
-  required int? selectedSeedIndex,
-  required void Function(String seed, int index) onSeedSelected,
-  required String? recomposeOutputPath,
-  required void Function(String path) onRecomposeOutputPathSelected,
   required String? repeatPassword,
   required TextEditingController repeatPasswordController,
   required void Function(String value) onRepeatPasswordChanged,
-  required String? recomposePassword,
-  required TextEditingController recomposePasswordController,
-  required void Function(String value) onRecomposePasswordChanged,
 }) {
-  final fragmentCard = AppCard(
+  final card = AppCard(
     title: 'Fragment',
     child: Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
         Text('Split a file into encrypted pieces.', style: minitTextStyle()),
         const SizedBox(height: 16),
-        TargetFileSelector(currentFilePath: selectedFilePath, onFileSelected: onFileSelected),
+        TargetFileSelector(
+          currentFilePath: selectedFilePath,
+          onFileSelected: onFileSelected,
+        ),
         const SizedBox(height: 14),
-        OutputPathSelector(currentPath: selectedOutputPath, onPathSelected: onOutputPathSelected),
+        OutputPathSelector(
+          currentPath: selectedOutputPath,
+          onPathSelected: onOutputPathSelected,
+        ),
         const SizedBox(height: 16),
         PasswordAndEncryptionOptions(
           encryptionLevel: encryptionLevel,
@@ -58,12 +59,19 @@ Widget mainScreen({
           onRepeatPasswordChanged: onRepeatPasswordChanged,
         ),
         const SizedBox(height: 12),
-        SliderWidget(currentValue: fragmentSize, onChanged: onFragmentSizeChanged),
+        SliderWidget(
+          currentValue: fragmentSize,
+          onChanged: onFragmentSizeChanged,
+        ),
         const SizedBox(height: 8),
         Row(
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
-            const Icon(Icons.warning_amber_rounded, color: Colors.amber, size: 20),
+            const Icon(
+              Icons.warning_amber_rounded,
+              color: Colors.amber,
+              size: 20,
+            ),
             const SizedBox(width: 8),
             Expanded(
               child: Text(
@@ -86,10 +94,10 @@ Widget mainScreen({
             final prefs = await SharedPreferences.getInstance();
 
             if (!prefs.containsKey(kSelectedOutputPathKey)) {
-              onOutputPathSelected('');
+              onOutputPathSelected(defaultFragmentsDir());
             }
             if (!prefs.containsKey(kFragmentSizeKey)) {
-              onFragmentSizeChanged(5);
+              onFragmentSizeChanged(kDefaultPieces);
             }
             if (!prefs.containsKey(kEncryptionLevelKey)) {
               onEncryptionLevelChanged('Total');
@@ -106,7 +114,21 @@ Widget mainScreen({
     ),
   );
 
-  final seedsCard = AppCard(
+  return _centred(card);
+}
+
+/// Recompose tab: the saved seeds and what is needed to rebuild one.
+Widget recomposeScreen({
+  required String? selectedSeed,
+  required int? selectedSeedIndex,
+  required void Function(String seed, int index) onSeedSelected,
+  required String? recomposeOutputPath,
+  required void Function(String path) onRecomposeOutputPathSelected,
+  required String? recomposePassword,
+  required TextEditingController recomposePasswordController,
+  required void Function(String value) onRecomposePasswordChanged,
+}) {
+  final card = AppCard(
     title: 'Seeds',
     trailing: Row(
       mainAxisSize: MainAxisSize.min,
@@ -152,40 +174,54 @@ Widget mainScreen({
             label: 'Where are the pieces?',
             value: recomposeOutputPath,
             placeholder: 'No folder selected',
+            dropKind: DropKind.directory,
+            onDrop: onRecomposeOutputPathSelected,
             onBrowse: () async {
-              final picked = await pickDirectoryPath();
+              final start =
+                  (recomposeOutputPath != null &&
+                          Directory(recomposeOutputPath).existsSync())
+                      ? recomposeOutputPath
+                      : desktopDir();
+              final picked = await pickDirectoryPath(initialDirectory: start);
               if (picked != null) onRecomposeOutputPathSelected(picked);
             },
           ),
           const SizedBox(height: 14),
-          LayoutBuilder(builder: (context, c) {
-            final field = PasswordField(
-              controller: recomposePasswordController,
-              label: 'Password',
-              onChanged: onRecomposePasswordChanged,
-            );
-            final button = RecomposeButton(
-              seed: selectedSeed,
-              password: recomposePassword,
-              onRefreshRequested: () => seedsTableKey.currentState?.refreshTable(),
-              onClearFields: () {
-                recomposePasswordController.clear();
-                onRecomposePasswordChanged('');
-                onSeedSelected('', -1);
-              },
-              inputPath: recomposeOutputPath,
-            );
-            if (c.maxWidth >= 440) {
-              return Row(
-                crossAxisAlignment: CrossAxisAlignment.start,
-                children: [Expanded(child: field), const SizedBox(width: 12), button],
+          LayoutBuilder(
+            builder: (context, c) {
+              final field = PasswordField(
+                controller: recomposePasswordController,
+                label: 'Password',
+                onChanged: onRecomposePasswordChanged,
               );
-            }
-            return Column(
-              crossAxisAlignment: CrossAxisAlignment.stretch,
-              children: [field, const SizedBox(height: 12), button],
-            );
-          }),
+              final button = RecomposeButton(
+                seed: selectedSeed,
+                password: recomposePassword,
+                onRefreshRequested:
+                    () => seedsTableKey.currentState?.refreshTable(),
+                onClearFields: () {
+                  recomposePasswordController.clear();
+                  onRecomposePasswordChanged('');
+                  onSeedSelected('', -1);
+                },
+                inputPath: recomposeOutputPath,
+              );
+              if (c.maxWidth >= 440) {
+                return Row(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    Expanded(child: field),
+                    const SizedBox(width: 12),
+                    button,
+                  ],
+                );
+              }
+              return Column(
+                crossAxisAlignment: CrossAxisAlignment.stretch,
+                children: [field, const SizedBox(height: 12), button],
+              );
+            },
+          ),
           const SizedBox(height: 16),
         ],
         Wrap(
@@ -195,11 +231,13 @@ Widget mainScreen({
           children: [
             DeleteSeedButton(
               seed: selectedSeed,
-              onRefreshRequested: () => seedsTableKey.currentState?.refreshTable(),
+              onRefreshRequested:
+                  () => seedsTableKey.currentState?.refreshTable(),
               onClearSelection: () => onSeedSelected('', -1),
             ),
             AddSeedButton(
-              onRefreshRequested: () => seedsTableKey.currentState?.refreshTable(),
+              onRefreshRequested:
+                  () => seedsTableKey.currentState?.refreshTable(),
             ),
           ],
         ),
@@ -207,27 +245,23 @@ Widget mainScreen({
     ),
   );
 
+  return _centred(card);
+}
+
+/// A scrolling page with a single card, centred and not wider than 760 px.
+Widget _centred(Widget card) {
   return Scrollbar(
     controller: scrollController,
     thumbVisibility: true,
     child: SingleChildScrollView(
       controller: scrollController,
       padding: const EdgeInsets.all(16),
-      child: LayoutBuilder(builder: (context, c) {
-        if (c.maxWidth >= kWideLayout) {
-          return Row(
-            crossAxisAlignment: CrossAxisAlignment.start,
-            children: [
-              Expanded(child: fragmentCard),
-              const SizedBox(width: 16),
-              Expanded(child: seedsCard),
-            ],
-          );
-        }
-        return Column(
-          children: [fragmentCard, const SizedBox(height: 16), seedsCard],
-        );
-      }),
+      child: Center(
+        child: ConstrainedBox(
+          constraints: const BoxConstraints(maxWidth: 760),
+          child: card,
+        ),
+      ),
     ),
   );
 }
