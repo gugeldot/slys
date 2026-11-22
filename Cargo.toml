@@ -1,0 +1,18 @@
+[workspace]
+resolver = "2"
+members = ["crates/slys-core", "crates/slys-cli"]
+
+[workspace.package]
+# Single source of truth for the version. `scripts/set-version.sh` propagates it
+# to app/pubspec.yaml, the Inno Setup script and the Flatpak metainfo.
+version = "1.6.0"
+edition = "2021"
+license = "GPL-3.0-or-later"
+repository = "https://github.com/gugeldot/slys"
+authors = ["Gugeldot"]
+
+[profile.release]
+lto = true
+codegen-units = 1
+strip = true
+panic = "abort"
