@@ -1,0 +1,37 @@
+# Rust
+/target/
+**/*.rs.bk
+
+# Flutter / Dart (app/ has its own .gitignore too)
+.dart_tool/
+build/
+
+# Generated bridge code is committed on purpose (see app/README.md); local tooling output is not
+*.log
+*.tmp
+*.swp
+*~
+.idea/
+.vscode/
+.DS_Store
+Thumbs.db
+
+# Packaging output
+/dist/
+/packaging/**/build/
+/packaging/**/*.flatpak
+/.flatpak-builder/
+/flatpak-repo/
+
+# Runtime data that must never be committed
+*.slys
+**/seeds.json
+**/inactivity.json
+!crates/slys-core/tests/fixtures/**/*.slys
+
+# Secrets
+.env
+.env.*
+*.pfx
+*.p12
+*.pem
