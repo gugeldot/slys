@@ -121,7 +121,7 @@ Widget mainScreen({
                         onFragmentSizeChanged(5);
                       }
                       if (!prefs.containsKey(kEncryptionLevelKey)) {
-                        onEncryptionLevelChanged('Partial');
+                        onEncryptionLevelChanged('Total');
                       }
 
                       onFileSelected('');

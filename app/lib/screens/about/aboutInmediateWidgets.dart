@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'about_fn.dart';
 import '../../utils/app_styles.dart';
+import '../../src/rust/api/version.dart';
 
 
 Widget imageBlock(){
@@ -24,8 +25,8 @@ Widget whyTextBlock() {
       Text(
         "We're increasingly exposed to organizations and institutions accessing our files without clear or informed consent. This tool is a response to that intrusion — a way to fragment and encrypt your data so it can't be easily read or reconstructed without your permission.\n\n"
         "By splitting and encrypting the content, it adds an extra layer of security: sensitive information can remain on your device without being immediately accessible. Only with the correct password and the Slys-generated seed can the original file be restored, giving full control back to the user.\n\n"
-        "Additionally, the application includes a self-erasing mechanism after a defined period of inactivity. This doesn't just remove the program's pointer—it securely wipes its own data by overwriting it with zeros, ensuring nothing recoverable is left behind.\n\n"
-        "In the event that something happens to the user, the fragmented data remains on the system but becomes completely inaccessible. However, this does not prevent the user from reinstalling the tool later and reintroducing the seed to reconstruct the original files when needed.",
+        "If something happens to you, the fragments stay on your system but are useless without the password and the seed. Reinstalling the tool later and entering the seed is all it takes to rebuild your files.\n\n"
+        "An optional wipe of the app's local seed list after a period of inactivity is planned for a future version.",
         style: defaultTextStyle(),
       ),
     ],
@@ -54,15 +55,15 @@ Widget capabilitiesTextBlock(){
                     bullet("Only with both the password and the seed can the file be fully restored via Slys."),
                     const SizedBox(height: 24),
 
-                    sectionTitle("3. Secure Self-Erasure on Inactivity (Planned Feature)"),
-                    bullet("The application can auto-delete itself after a defined period of inactivity."),
-                    bullet("This includes secure data wiping through zero-overwriting, not just removing executables."),
-                    bullet("Ensures that if something happens to the user, sensitive data remains physically present but completely inaccessible."),
+                    sectionTitle("3. Inactivity Wipe (Planned Feature)"),
+                    bullet("Opt-in: after a period without use, the app's local list of saved seeds would be securely deleted."),
+                    bullet("Your fragments are not touched. They are already unreadable without the password and the seed."),
+                    bullet("It cannot be tamper-proof: whoever controls the computer controls its clock. It is a convenience safeguard."),
                     const SizedBox(height: 24),
 
                     sectionTitle("4. Recoverability via Reinstallation"),
-                    bullet("Even after self-erasure, users can reinstall the tool and reintroduce the encrypted seed to reconstruct their files."),
-                    bullet("This ensures long-term control and access without compromising on security."),
+                    bullet("Users can reinstall the tool at any time and reintroduce the seed to reconstruct their files."),
+                    bullet("Seeds made by SLYS 1.x can still be used to rebuild files."),
                   ],
                 ),
               ),
@@ -71,10 +72,22 @@ Widget capabilitiesTextBlock(){
 }
 
 Widget ackTextBlock(){
-  return Text(
-                "From: The Slys dev-team ♡",
-                style: defaultTextStyle(),
-              );
+  final v = versionInfo();
+  final commit = v.commit == 'unknown' ? '' : ' · ${v.commit}';
+  return Column(
+    crossAxisAlignment: CrossAxisAlignment.start,
+    children: [
+      Text(
+        "SLYS ${v.version}$commit · seed format ${v.seedFormat}",
+        style: defaultTextStyle(),
+      ),
+      const SizedBox(height: 4),
+      Text(
+        "From: The Slys dev-team ♡",
+        style: defaultTextStyle(),
+      ),
+    ],
+  );
 }
 
 

@@ -1,23 +1,29 @@
 
 import 'package:flutter/material.dart';
 import 'package:file_picker/file_picker.dart';
-import 'dart:io';
-import 'dart:convert';
-import 'package:flutter/services.dart'; // Para Clipboard
 import '../../utils/app_styles.dart';
-import 'package:path/path.dart' as p;
 import 'package:shared_preferences/shared_preferences.dart';
+import '../../services/operation_runner.dart';
+import '../../src/rust/api/operations.dart';
+import '../../src/rust/api/storage.dart';
 
 
+/// Keys are the values stored in preferences since 1.x; they map to the core's modes.
 final Map<String, String> encryptionOptions = {
-          'None': 'None (Fast & Unsafe)',
-          'Partial': 'Mid (Optimal)',
-          'Total': 'High (Slow & Safer)',
+          'Total': 'High (Recommended)',
+          'Partial': 'Mid (Light: leaves most data readable)',
+          'None': 'None (Obfuscation only)',
         };
 
-String getSeedJsonPath() {
-    final home = Platform.environment['HOME'] ?? '';
-    return p.join(home, '.config', 'slys', 'seeds.json');
+EncryptionMode encryptionModeFromKey(String key) {
+  switch (key) {
+    case 'Partial':
+      return EncryptionMode.light;
+    case 'None':
+      return EncryptionMode.plain;
+    default:
+      return EncryptionMode.full;
+  }
 }
 
 class TargetFileSelector extends StatefulWidget {
@@ -337,108 +343,30 @@ class FragButton extends StatelessWidget {
         
         onPressed: isButtonEnabled
     ? () async {
-        final args = [
-          'frag',
-          selectedFilePath!,
-          selectedOutputPath!,
-          encryptionLevel,
-          fragmentSize.toString(),
-          password!,
-        ];
+        final events = fragment(
+          req: FragmentRequest(
+            inputPath: selectedFilePath!,
+            outputDir: selectedOutputPath!,
+            password: password!,
+            mode: encryptionModeFromKey(encryptionLevel),
+            parts: fragmentSize,
+            deleteOriginal: DeletePolicy.wipe,
+          ),
+        );
+        final result = await runOperation(context, events, title: 'Slys!');
+        if (!context.mounted || result == null) return;
 
-        try {
-          final process = await Process.start(
-            'Resources/backend/backend.bin',
-            args,
-            runInShell: true,
-          );
-
-          final stdoutBuffer = StringBuffer();
-          final stderrBuffer = StringBuffer();
-
-          process.stdout.transform(utf8.decoder).listen((data) {
-            stdoutBuffer.write(data);
-          });
-          process.stderr.transform(utf8.decoder).listen((data) {
-            stderrBuffer.write(data);
-          });
-
-
-          final exitCode = await process.exitCode;
-
-          if (exitCode == 0) {
-            final output = stdoutBuffer.toString();
-
-            if (context.mounted) {
-              /*
-              final save = await showDialog<bool>(
-                context: context,
-                builder: (context) => AlertDialog(
-                  backgroundColor: Colors.grey[900],
-                  title: const Text("Save seed on app?", style: TextStyle(color: Colors.white)),
-                  content: const Text("Do you want to save the generated seed?", style: TextStyle(color: Colors.white70)),
-                  actions: [
-                    TextButton(onPressed: () => Navigator.pop(context, true), child: const Text("Yes")),
-                    TextButton(onPressed: () => Navigator.pop(context, false), child: const Text("No")),
-                  ],
-                ),
-              );*/
-              final save = true;
-              
-              if (save == true) {
-                final addProcess = await Process.start(
-                  'Resources/backend/backend.bin',
-                  ["add-seed", output],
-                  runInShell: true,
-                );
-                await addProcess.exitCode;
-                onClearFields?.call();
-              } /*else {
-                await Clipboard.setData(ClipboardData(text: output));
-                if (context.mounted) {
-                  await showDialog(
-                    context: context,
-                    builder: (context) => AlertDialog(
-                      backgroundColor: Colors.grey[850],
-                      title: const Text("Copied to clipboard", style: TextStyle(color: Colors.white)),
-                      content: const Text("Seed was copied to clipboard successfully.", style: TextStyle(color: Colors.white70)),
-                      actions: [
-                        TextButton(
-                          onPressed: () => Navigator.pop(context),
-                          child: const Text("OK"),
-                        ),
-                      ],
-                    ),
-                  );
-                  onClearFields?.call();
-                }
-              }*/
-
-              // 🟩 Finalmente, aquí va el llamado:
-              onSeedAdded?.call();
-            }
+        if (result is OperationEvent_Fragmented) {
+          // The seed is saved locally (as in 1.x) so it can be picked from the list later.
+          seedsAdd(seed: result.field0.seed);
+          final warnings = result.field0.warnings;
+          if (warnings.isNotEmpty) {
+            await showMessage(context, 'Done, with warnings', warnings.join('\n'));
           }
-          else {
-             final errorOutput = stderrBuffer.toString();
-             if (context.mounted) {
-             showDialog(
-                    context: context,
-                    builder: (context) => AlertDialog(
-                      backgroundColor: Colors.grey[850],
-                      title: Text("Error", style: TextStyle(color: AppTheme.white)),
-                      content:  Text("Fragmentation failed:\n$errorOutput", style: TextStyle(color: Colors.white70)),
-                      actions: [
-                        TextButton(
-                          onPressed: () => Navigator.pop(context),
-                          child: const Text("OK"),
-                        ),
-                      ],
-                    ),
-                  );
-              }
-          }
-        } catch (e) {
-          // Podés mostrar un snackbar o algo para errores también
+          onSeedAdded?.call();
+          onClearFields?.call();
+        } else if (result is OperationEvent_Failed) {
+          await showMessage(context, 'Error', 'Fragmentation failed:\n${result.field0.message}');
         }
       }
     : null,
@@ -457,25 +385,6 @@ class FragButton extends StatelessWidget {
     
   }
 }
-
-Future<int> slys_backend(List<String> args) async {
-  try {
-    final process = await Process.start(
-      'Resources/backend/backend.bin',
-      args,
-      runInShell: true,
-    );
-
-    
-    return await process.exitCode; // ✅ Devolvemos el código de salida
-  } catch (e) {
-    //print('Error al ejecutar slys_backend: $e');
-    return -1; // Código de error
-  }
-}
-
-
-
 
 class SliderWidget extends StatelessWidget {
   final int currentValue;
@@ -536,7 +445,7 @@ class SeedsTable extends StatefulWidget {
 
 
 class SeedsTableState extends State<SeedsTable> {
-  List<Map<String, dynamic>> seeds = [];
+  List<SavedSeed> seeds = [];
   bool fileExists = true;
   bool isLoading = true;
   int? selectedRowIndex; // Guarda el índice seleccionado
@@ -554,24 +463,15 @@ class SeedsTableState extends State<SeedsTable> {
       isLoading = true;
     });
     try {
-      final file = File(getSeedJsonPath());
-      if (await file.exists()) {
-        final content = await file.readAsString();
-        final jsonData = json.decode(content);
-        if (jsonData is List) {
-          setState(() {
-            seeds = List<Map<String, dynamic>>.from(jsonData);
-            isLoading = false;
-          });
-        }
-      } else {
-        setState(() {
-          fileExists = false;
-          isLoading = false;
-        });
-      }
+      final list = seedsList();
+      setState(() {
+        seeds = list;
+        fileExists = true;
+        isLoading = false;
+      });
     } catch (e) {
       setState(() {
+        seeds = [];
         fileExists = false;
         isLoading = false;
       });
@@ -627,7 +527,7 @@ class SeedsTableState extends State<SeedsTable> {
                   if (widget.selectedIndex == index) {
                     widget.onSeedSelected('', -1);
                   } else {
-                    widget.onSeedSelected(seedData['seed'], index);
+                    widget.onSeedSelected(seedData.seed, index);
                   }
                 },
                 color: WidgetStateProperty.resolveWith<Color?>(
@@ -639,8 +539,8 @@ class SeedsTableState extends State<SeedsTable> {
                   },
                 ),
                 cells: [
-                  DataCell(Text(seedData['nombre'] ?? '', style:  TextStyle(color: AppTheme.white))),
-                  DataCell(Text(seedData['seed'] ?? '', style:  TextStyle(color: AppTheme.white))),
+                  DataCell(Text(seedData.name, style:  TextStyle(color: AppTheme.white))),
+                  DataCell(Text(seedData.seed, style:  TextStyle(color: AppTheme.white))),
                 ],
               );
             },
@@ -685,37 +585,35 @@ class RecomposeButton extends StatelessWidget {
                 if (outputPath == null) return; // Usuario canceló
               }
 
-              final args = ["compose", seed!.trim(), password!.trim(), outputPath, inputPath!];
-
-              final process = await Process.start(
-                'Resources/backend/backend.bin',
-                args,
-                runInShell: true,
+              final events = recompose(
+                req: RecomposeRequest(
+                  seed: seed!.trim(),
+                  password: password!,
+                  fragmentsDir: inputPath!,
+                  outputDir: outputPath,
+                  overwrite: false,
+                  deleteFragments: DeletePolicy.wipe,
+                ),
               );
+              if (!context.mounted) return;
+              final result = await runOperation(context, events, title: 'Recompose!');
+              if (!context.mounted || result == null) return;
 
-              final stdoutBuffer = StringBuffer();
-              final stderrBuffer = StringBuffer();
-
-              process.stdout.transform(utf8.decoder).listen((data) {
-                stdoutBuffer.write(data);
-              });
-              process.stderr.transform(utf8.decoder).listen((data) {
-                stderrBuffer.write(data);
-              });
-
-              final exitCode = await process.exitCode;
-
-              if (exitCode == 0) {
-                final delCode = await slys_backend(["del-seed", seed!]);
-
-                if (delCode == 0) {
-                  _showDialog(context, "Success", "Seed recomposed successfully.");
-                } else {
-                  _showDialog(context, "Error", "Error while deleting the seed.");
-                }
-              } else {
-                final err = stderrBuffer.toString();
-                _showDialog(context, "Error", "Failed to recompose:\n$err");
+              if (result is OperationEvent_Recomposed) {
+                final out = result.field0;
+                _removeSeedFromList(seed!);
+                final extra = out.warnings.isEmpty ? '' : '\n\n${out.warnings.join('\n')}';
+                await showMessage(
+                  context,
+                  'Success',
+                  'File recomposed:\n${out.outputPath}$extra',
+                );
+              } else if (result is OperationEvent_Failed) {
+                await showMessage(
+                  context,
+                  'Error',
+                  'Failed to recompose:\n${result.field0.message}',
+                );
               }
 
               onRefreshRequested?.call();
@@ -732,24 +630,19 @@ class RecomposeButton extends StatelessWidget {
     );
   }
 
-  void _showDialog(BuildContext context, String title, String message) {
-    if (context.mounted) {
-      showDialog(
-        context: context,
-        builder: (context) => AlertDialog(
-          backgroundColor: Colors.grey[850],
-          title: Text(title, style:  TextStyle(color: Colors.white)),
-          content: Text(message, style: const TextStyle(color: Colors.white70)),
-          actions: [
-            TextButton(
-              onPressed: () => Navigator.pop(context),
-              child: const Text("OK"),
-            ),
-          ],
-        ),
-      );
+}
+
+/// Removes a seed from the local list by its text. Returns whether it was removed.
+bool _removeSeedFromList(String seed) {
+  try {
+    final wanted = seed.trim();
+    for (final s in seedsList()) {
+      if (s.seed == wanted) {
+        return seedsRemove(id: s.id);
+      }
     }
-  }
+  } catch (_) {}
+  return false;
 }
 
 
@@ -771,13 +664,13 @@ class DeleteSeedButton extends StatelessWidget {
     return ElevatedButton(
       onPressed: seed != null
           ? () async {
-              final result = await slys_backend(["del-seed", seed!]);
+              final removed = _removeSeedFromList(seed!);
 
-              if (result == 0) {
-                _showDialog(context, "Deleted", "Seed deleted successfully.");
+              if (removed) {
+                await showMessage(context, "Deleted", "Seed deleted successfully.");
                 onClearSelection?.call(); // 👈 deselect
               } else {
-                _showDialog(context, "Error", "Failed to delete seed.");
+                await showMessage(context, "Error", "Failed to delete seed.");
               }
 
 
@@ -789,25 +682,6 @@ class DeleteSeedButton extends StatelessWidget {
       ),
       child: const Text("Delete", style: TextStyle(color: Colors.white,fontWeight: FontWeight.bold)),
     );
-  }
-
-  void _showDialog(BuildContext context, String title, String message) {
-    if (context.mounted) {
-      showDialog(
-        context: context,
-        builder: (context) => AlertDialog(
-          backgroundColor: Colors.grey[850],
-          title: Text(title, style:  TextStyle(color: Colors.white)),
-          content: Text(message, style: const TextStyle(color: Colors.white70)),
-          actions: [
-            TextButton(
-              onPressed: () => Navigator.pop(context),
-              child: const Text("OK"),
-            ),
-          ],
-        ),
-      );
-    }
   }
 }
 
@@ -863,12 +737,15 @@ class AddSeedButton extends StatelessWidget {
                 return;
               }
 
-              final result = await slys_backend(["add-seed", seed]);
-
-              if (result == 0) {
-                _showDialog(context, "Success", "Seed added successfully.");
-              } else {
-                _showDialog(context, "Error", "Failed to add seed.");
+              // Catch typos right away: v2 seeds carry a checksum.
+              try {
+                inspectSeed(text: seed);
+                seedsAdd(seed: seed);
+                await showMessage(context, "Success", "Seed added successfully.");
+              } on SlysError catch (e) {
+                await showMessage(context, "Error", e.message);
+              } catch (_) {
+                await showMessage(context, "Error", "Failed to add seed.");
               }
 
               onRefreshRequested?.call();

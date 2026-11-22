@@ -22,7 +22,7 @@ class _HomeScreenState extends State<HomeScreen> {
 
   String? selectedFilePath;
   String? selectedOutputPath;
-  String encryptionLevel = 'Partial';
+  String encryptionLevel = 'Total';
   String? password;
   String? selectedSeedGlobal;
   int? selectedSeedIndexGlobal;
@@ -44,7 +44,7 @@ class _HomeScreenState extends State<HomeScreen> {
       selectedOutputPath = prefs.getString('selectedOutputPath')?? null;
       selectedRecomposeOutputPath = prefs.getString('selectedRecomposeOutputPath') ?? null;
       fragmentSize = prefs.getInt('fragmentSize') ?? 5;
-      encryptionLevel = prefs.getString('encryptionLevel') ?? 'Partial';
+      encryptionLevel = prefs.getString('encryptionLevel') ?? 'Total';
     });
   }
 
@@ -66,7 +66,7 @@ void initState() {
       selectedOutputPath = prefs.getString(kSelectedOutputPathKey);
       selectedRecomposeOutputPath = prefs.getString(kRecomposeOutputPathKey);
       fragmentSize = prefs.getInt(kFragmentSizeKey) ?? 5;
-      encryptionLevel = prefs.getString(kEncryptionLevelKey) ?? 'Partial';
+      encryptionLevel = prefs.getString(kEncryptionLevelKey) ?? 'Total';
     });
 
     final filePath = await loadSelectedFilePath();
@@ -195,7 +195,7 @@ Widget _tabButton(String text, int index) {
                 encryptionLevel: encryptionLevel,
                 onEncryptionLevelChanged: (value) {
                   setState(() {
-                    encryptionLevel = value ?? 'Partial';
+                    encryptionLevel = value ?? 'Total';
                   });
                 },
                 fragmentSize: fragmentSize,
