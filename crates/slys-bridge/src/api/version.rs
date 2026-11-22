@@ -13,5 +13,9 @@ pub struct VersionInfo {
 #[frb(sync)]
 pub fn version_info() -> VersionInfo {
     let v = slys_core::version();
-    VersionInfo { version: v.core.to_string(), seed_format: v.seed_format, commit: v.commit.to_string() }
+    VersionInfo {
+        version: v.core.to_string(),
+        seed_format: v.seed_format,
+        commit: v.commit.to_string(),
+    }
 }

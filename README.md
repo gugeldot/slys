@@ -1,47 +1,69 @@
-![Status](https://img.shields.io/badge/NOTICE-In_Development-purple)
-
 <div align="center">
-<img src="Resources/Images/invert_slys.png" alt="Texto alternativo" width="400" />
+<img src="app/assets/images/invert_slys.png" alt="SLYS" width="360" />
+
+**Fragment and encrypt your files. Rebuild them with a seed and a password.**
+
+[Website](https://gugeldot.github.io/slys-web/) · [Download](https://github.com/gugeldot/slys/releases) · [Security](SECURITY.md) · [Format](docs/FORMAT.md)
 </div>
 
-## 
-File encrypted fragmentator for privacy built in Rust
+## What it does
 
-## Why? 
-We're increasingly exposed to organizations and institutions accessing our files without clear or informed consent. This tool is a response to that intrusion — a way to fragment and encrypt your data so it can't be easily read or reconstructed without your permission.
+SLYS splits a file into pieces and encrypts every piece. To get the file back you need three
+things: the **seed** (a short text), the **password**, and the **pieces**. Without all three the
+data cannot be rebuilt.
 
-By splitting and encrypting the content, it adds an extra layer of security: sensitive information can remain on your device without being immediately accessible. Only with the correct password and the Slys-generated seed can the original file be restored, giving full control back to the user.
+* Every fragment is encrypted and authenticated (AES-256-GCM); the key comes from your password
+  with Argon2id.
+* Any change to a fragment is detected. Fragments from another seed, in the wrong order or
+  truncated are rejected.
+* The seed has a checksum, so a typo is reported immediately instead of failing later.
+* Nothing is deleted until the rebuilt file has been verified byte for byte.
+* SLYS itself never connects to the network (links in the app only open your browser when you click them).
+* Seeds made by SLYS 1.x can still be used.
 
-Additionally, the application includes a self-erasing mechanism after a defined period of inactivity. This doesn't just remove the program's pointer—it securely wipes its own data by overwriting it with zeros, ensuring nothing recoverable is left behind.
+## Install
 
-In the event that something happens to the user, the fragmented data remains on the system but becomes completely inaccessible. However, this does not prevent the user from reinstalling the tool later and reintroducing the seed to reconstruct the original files when needed.
+Get the files from the [Releases](https://github.com/gugeldot/slys/releases) page and verify them:
 
-## Capabilities 
-### 1. **File Fragmentation & Encryption**
-- Splits a selected file into multiple fragments.  
-- Each fragment is encrypted individually using a user-defined password.  
-- Fragments are stored in a way that prevents reconstruction without proper credentials.
+```
+sha256sum -c SHA256SUMS
+gh attestation verify Slys_Installer.exe --repo gugeldot/slys
+```
 
-### 2. **Seed Generation for Reconstruction**
-- After fragmentation, the system generates a unique seed required to reconstruct the original file.  
-- The seed itself is encrypted and must be stored securely by the user.  
-- Only with both the password and the seed can the file be fully restored via Slys.
+| Platform | File |
+|---|---|
+| Windows 10+ | `Slys_Installer.exe` (or `Slys_Windows_Portable.zip`) |
+| Linux | `Slys.flatpak` (`flatpak install --user Slys.flatpak`) or `Slys_Linux.zip` |
 
-### 3. **Secure Self-Erasure on Inactivity** *(Planned Feature)*
-- The application can auto-delete itself after a defined period of inactivity.  
-- This includes secure data wiping through zero-overwriting, not just removing executables.  
-- Ensures that if something happens to the user, sensitive data remains physically present but completely inaccessible.
+macOS is planned.
 
-### 4. **Recoverability via Reinstallation**
-- Even after self-erasure, users can reinstall the tool and reintroduce the encrypted seed to reconstruct their files.  
-- This ensures long-term control and access without compromising on security.
+## Use it from the terminal
 
-   
-## Instalation
- <img src="https://img.shields.io/badge/-UNDER_CONSTRUCTION-red?style=for-the-badge&logo=tools&logoColor=black" alt="Under Construction Badge">
- 
-## Usage
- <img src="https://img.shields.io/badge/-UNDER_CONSTRUCTION-red?style=for-the-badge&logo=tools&logoColor=black" alt="Under Construction Badge">
+```
+slys frag report.pdf -o ./pieces -n 8        # prints the seed; asks for the password
+slys compose "$SEED" -f ./pieces -o ./out    # rebuilds report.pdf
+slys inspect "$SEED"                         # check a seed for typos, no password needed
+```
 
+Passwords are never accepted as arguments (they would show up in `ps` and in your shell history).
 
+## Build from source
 
+```
+git clone https://github.com/gugeldot/slys && cd slys
+cargo test --workspace            # the core and the CLI
+cd app && flutter build linux     # or: flutter build windows
+```
+
+See [docs/DEVELOPMENT.md](docs/DEVELOPMENT.md) (setup, fast edit loop, tests) and
+[docs/RELEASING.md](docs/RELEASING.md).
+
+## Honest limits
+
+SLYS is not audited and it is not magic: a weak password, a compromised computer or the
+*Plain*/*Light* modes weaken it, and secure deletion on SSDs is best effort. Read
+[SECURITY.md](SECURITY.md) before trusting it with something important.
+
+## License
+
+[GPL-3.0-or-later](LICENSE).

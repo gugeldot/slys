@@ -106,7 +106,10 @@ pub(crate) fn to_error(e: &core::Error) -> SlysError {
         Crypto => "crypto",
         Storage(_) => "storage",
     };
-    SlysError { code: code.into(), message: e.to_string() }
+    SlysError {
+        code: code.into(),
+        message: e.to_string(),
+    }
 }
 
 fn mode(m: EncryptionMode) -> core::Mode {
@@ -150,7 +153,11 @@ pub fn fragment(req: FragmentRequest, events: StreamSink<OperationEvent>) {
         let pct = (p.done * 100).checked_div(p.total).unwrap_or(0);
         if pct != last_pct || p.total == 0 {
             last_pct = pct;
-            let _ = events.add(OperationEvent::Progress { stage: stage(p.stage), done: p.done, total: p.total });
+            let _ = events.add(OperationEvent::Progress {
+                stage: stage(p.stage),
+                done: p.done,
+                total: p.total,
+            });
         }
     };
     let result = core::fragment(
@@ -173,13 +180,20 @@ pub fn fragment(req: FragmentRequest, events: StreamSink<OperationEvent>) {
 
 /// Rebuilds a file. Same event protocol as [`fragment`].
 pub fn recompose(req: RecomposeRequest, events: StreamSink<OperationEvent>) {
-    let opts = core::RecomposeOptions { overwrite: req.overwrite, delete_fragments: delete(req.delete_fragments) };
+    let opts = core::RecomposeOptions {
+        overwrite: req.overwrite,
+        delete_fragments: delete(req.delete_fragments),
+    };
     let mut last_pct = u64::MAX;
     let mut progress = |p: core::Progress| {
         let pct = (p.done * 100).checked_div(p.total).unwrap_or(0);
         if pct != last_pct || p.total == 0 {
             last_pct = pct;
-            let _ = events.add(OperationEvent::Progress { stage: stage(p.stage), done: p.done, total: p.total });
+            let _ = events.add(OperationEvent::Progress {
+                stage: stage(p.stage),
+                done: p.done,
+                total: p.total,
+            });
         }
     };
     let result = core::recompose(

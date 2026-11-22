@@ -22,14 +22,26 @@ pub fn seeds_list() -> Result<Vec<SavedSeed>, SlysError> {
     let entries = vault()?.list().map_err(|e| to_error(&e))?;
     Ok(entries
         .into_iter()
-        .map(|e| SavedSeed { id: e.id, name: e.name, seed: e.seed, created_at: e.created_at })
+        .map(|e| SavedSeed {
+            id: e.id,
+            name: e.name,
+            seed: e.seed,
+            created_at: e.created_at,
+        })
         .collect())
 }
 
 #[frb(sync)]
 pub fn seeds_add(seed: String, name: Option<String>) -> Result<SavedSeed, SlysError> {
-    let e = vault()?.add(&seed, name.as_deref()).map_err(|e| to_error(&e))?;
-    Ok(SavedSeed { id: e.id, name: e.name, seed: e.seed, created_at: e.created_at })
+    let e = vault()?
+        .add(&seed, name.as_deref())
+        .map_err(|e| to_error(&e))?;
+    Ok(SavedSeed {
+        id: e.id,
+        name: e.name,
+        seed: e.seed,
+        created_at: e.created_at,
+    })
 }
 
 #[frb(sync)]
@@ -55,7 +67,9 @@ pub fn inactivity_status() -> Result<InactivityStatus, SlysError> {
     let i = Inactivity::open_default().map_err(|e| to_error(&e))?;
     Ok(match i.status().map_err(|e| to_error(&e))? {
         Status::Disabled => InactivityStatus::Disabled,
-        Status::Armed { seconds_left } => InactivityStatus::Armed { days_left: (seconds_left / 86_400) as u32 },
+        Status::Armed { seconds_left } => InactivityStatus::Armed {
+            days_left: (seconds_left / 86_400) as u32,
+        },
         Status::Expired => InactivityStatus::Expired,
     })
 }

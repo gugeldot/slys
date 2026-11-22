@@ -7,7 +7,6 @@ import '../../services/file_dialogs.dart';
 import 'package:flutter/services.dart';
 import '../settings/settings.dart';
 import 'package:shared_preferences/shared_preferences.dart';
-import '../../utils/app_styles.dart';
 
 final ScrollController scrollController = ScrollController();
 final GlobalKey<SeedsTableState> seedsTableKey = GlobalKey<SeedsTableState>();
@@ -170,7 +169,8 @@ Widget mainScreen({
                             icon: Icon(Icons.copy, color:  AppTheme.white),
                             tooltip: 'Copy seed to clipboard',
                             onPressed: () async {
-                              await Clipboard.setData(ClipboardData(text: selectedSeed!)); // <-- cambio aquí
+                              // ignore: unnecessary_non_null_assertion
+                              await Clipboard.setData(ClipboardData(text: selectedSeed!));
                               if (ScaffoldMessenger.maybeOf(seedsTableKey.currentContext!) != null) {
                                 ScaffoldMessenger.of(seedsTableKey.currentContext!).showSnackBar(
                                   const SnackBar(
@@ -234,6 +234,7 @@ Widget mainScreen({
                     Row(
                       children: [
                         ElevatedButton(
+                          // ignore: unnecessary_null_comparison
                           onPressed: selectedSeed != null
                               ? () async {
                                   String? picked = await pickDirectoryPath();
