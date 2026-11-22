@@ -165,6 +165,14 @@ jobs:
         env:
           GH_TOKEN: ${{ github.token }}
         run: |
+          ver="${GITHUB_REF_NAME#v}"
+          # The notes are the CHANGELOG.md section of this version, plus how to verify the files.
+          awk -v v="$ver" '$0 ~ "^## \\[" v "\\]" {p=1; next} /^## \[/ && p {exit} p' CHANGELOG.md > notes.md
+          [ -s notes.md ] || echo "See CHANGELOG.md." > notes.md
+          {
+            echo
+            echo "---"
+            echo "Verify your download with \`SHA256SUMS\` or \`gh attestation verify <file> --repo ${GITHUB_REPOSITORY}\`."
+          } >> notes.md
           gh release create "$GITHUB_REF_NAME" dist/* --draft --verify-tag \
-            --title "SLYS ${GITHUB_REF_NAME#v}" \
-            --notes "See CHANGELOG.md. Verify downloads with SHA256SUMS or: gh attestation verify <file> --repo ${GITHUB_REPOSITORY}"
+            --title "SLYS ${ver}" --notes-file notes.md

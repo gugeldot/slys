@@ -2,7 +2,7 @@
 
 Format: [Keep a Changelog](https://keepachangelog.com/). Versions follow [SemVer](https://semver.org/).
 
-## [1.6.0] - unreleased
+## [1.6.0] - 2026-11-22
 
 ### Changed
 - **One program.** The Flutter app and the Rust core are now a single application linked through
@@ -36,46 +36,30 @@ Format: [Keep a Changelog](https://keepachangelog.com/). Versions follow [SemVer
   residual risks.
 
 ### Interface
-- Changing tab slides like a carousel: opaque pages side by side, the new one pushes the old one out (no
-  fade, so they never show through each other).
-- The window has its own icon (and the Flatpak ships it in 48, 64, 128 and 512 px), so taskbars and docks
-  that do not read the .desktop file show it too.
-- Passwords need 10 characters instead of 12.
-- Settings has an **Inactivity wipe** card: on/off (off by default), the number of days (presets or a
-  custom value, 1-3650), the time left, and a confirmation before turning it on. If a wipe happens, the
-  next start says so.
-- While the cursor is in a password field, the requirements not met yet turn red (neutral otherwise);
-  the "Passwords do not match" line is gone because it shifted the whole page when it appeared.
-- The Donate button no longer throws inside a Flatpak: it opens the browser through the portal, and if that
-  fails it copies the link and says so.
-- The password has requirements that turn green as they are met (10+ characters, upper and lower
-  case, a number, a symbol, both passwords equal); Slys! stays disabled until all are met. Rebuilding
-  accepts any password.
-- The pieces slider glides when you click the track and the number counts up or down on the way.
-- Dragging files onto the app in a Flatpak: only plain file URIs are accepted, avoiding the portal
-  "Invalid transfer" error.
-- Fragment and Recompose fill the window: two columns with a divider on wide windows, stacked on
-  narrow ones, and an action bar pinned to the bottom with the button and what is still missing.
-- Icons and tutorial step markers are white with outlines instead of filled accent colour.
-- Fragment and Recompose are separate tabs.
-- Drag a file (or folder) from the file manager onto the Target file, Output folder and
-  "Where are the pieces?" boxes instead of using Browse.
-- The output folder defaults to `<Desktop>/slys_fragments` (the Desktop folder is looked up per
-  language and OS); the same folder is the default for finding the pieces when rebuilding.
-- Recompose always asks where to save the rebuilt file; the dialog opens on the Desktop (or the
-  folder set in Settings).
-- New fragmentations use 10 pieces by default (was 5); a number you saved in Settings is kept.
-- About now holds the version (version, build commit, seed format, licence, with a button that copies them
-  for bug reports) and is much shorter; the legal notice is folded. The version is no longer in the header.
-- The tutorial is two illustrated step-by-step flows (fragment, rebuild) plus a reminder, instead of text.
-- Linux: the app prefers X11/XWayland. Flutter's Wayland path painted the UI at a quarter of the window
-  on KDE Plasma with scaled monitors. `GDK_BACKEND=wayland` still forces Wayland.
-- Native window frame instead of the fake title bar; the layout adapts to any window size
-  (two columns on wide windows, stacked on narrow ones) and the window can be resized freely.
-- Theme and accent colour apply instantly (the app no longer quits to apply them).
-- The Slys! button says what is missing; the seed list is a list, not a horizontal table;
-  recompose options appear when a seed is selected; the host name is no longer displayed.
-- Settings: default encryption now matches the rest of the app (High).
+- **Redesigned and responsive.** A native window frame instead of the fake title bar, freely
+  resizable. *Fragment* and *Recompose* are separate tabs that fill the window (two columns on wide
+  windows, stacked on narrow ones) with an action bar at the bottom that shows the button and what is
+  still missing. Changing tab slides like a carousel. The seeds are a list instead of a table.
+- **Drag and drop.** Drop a file or folder from your file manager onto the Target file, Output folder
+  and "Where are the pieces?" boxes instead of using Browse.
+- **Better defaults.** The output folder is `<Desktop>/slys_fragments`, the same one used to look for
+  the pieces when rebuilding; pieces default to 10; encryption defaults to High. Recompose always asks
+  where to save the rebuilt file, and the dialog opens on the Desktop (or the folder set in Settings).
+- **Password requirements** shown live: 10+ characters, upper and lower case, a number, a symbol and
+  both entries equal. They turn green as they are met, and red while the cursor is in a password field.
+  *Slys!* stays disabled until all are met. Rebuilding accepts any password, so old seeds still work.
+- The pieces slider glides to where you click and the number counts on the way.
+- **Settings:** theme and accent colour apply instantly (the app no longer quits to apply them), and
+  there is a new **Inactivity wipe** card: off by default, the number of days (presets or custom, 1-3650),
+  the time left, and a confirmation before turning it on. If a wipe happens, the next start says so.
+- **About** shows the version, build commit, seed format and licence, with a button that copies them
+  for bug reports; the tutorial is two illustrated flows; the legal notice is folded away; the host
+  name is no longer displayed.
+- The window has its own icon (the Flatpak ships it in 48, 64, 128 and 512 px).
+- Linux: the app prefers X11/XWayland, because Flutter's Wayland path painted the UI at a quarter of
+  the window on KDE Plasma with scaled monitors. `GDK_BACKEND=wayland` still forces Wayland.
+- Dragging in a Flatpak accepts plain file URIs only, which avoids the portal "Invalid transfer" error.
+- The Donate button opens the browser through the portal inside a Flatpak and copies the link if that fails.
 
 ### Fixed
 - A failed decryption while rebuilding used to write the encrypted bytes as if they were the file
