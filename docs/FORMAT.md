@@ -26,7 +26,7 @@ fragkey = HKDF-SHA256(master, info = "slys v2 fragment" || seed_id || index_u32)
   the same key.
 * Default cost: `m = 65536 KiB (64 MiB)`, `t = 3`, `lanes = 1`. The parameters are stored in the
   seed, so they can be raised in the future without breaking existing seeds.
-* When reading a seed the parameters are bounded (`m <= 1 GiB`, `t <= 32`, `lanes <= 16`) so a
+* When reading a seed the parameters are bounded (`m <= 512 MiB`, `t <= 16`, `lanes <= 16`) so a
   crafted seed cannot exhaust memory or time.
 * One Argon2id run per operation (not per fragment).
 

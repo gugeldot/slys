@@ -31,6 +31,8 @@ password. It does not protect against:
 * The seed carries a SHA-256 for each fragment and for the original; the rebuilt file is verified
   before anything is deleted.
 * Full specification: [docs/FORMAT.md](docs/FORMAT.md).
+* Threat model, adversarial tests, ISO/IEC 27002:2022 control mapping and the list of residual risks:
+  [docs/SECURITY_ARCHITECTURE.md](docs/SECURITY_ARCHITECTURE.md).
 
 ## Known limits (please read)
 

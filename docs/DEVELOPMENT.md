@@ -38,7 +38,9 @@ Useful CLI facts:
 
 * Passwords are never accepted as arguments. Use the prompt, `--password-stdin`, or
   `SLYS_PASSWORD=...` (handy in scripts).
-* `SLYS_FAST_KDF=1` makes Argon2 cheap so manual tests are instant. **Never use it for real data.**
+* `SLYS_FAST_KDF=1` makes Argon2 cheap so manual tests are instant. It only works in builds made with
+  `--features insecure-fast-kdf` (the demo script does that); release builds ignore it on purpose.
+  **Never use it for real data.**
 * `SLYS_CONFIG_DIR=/some/dir` moves the seed list, so experiments do not touch your real one.
   This also works for the app.
 
@@ -62,3 +64,27 @@ X.Y.Z` updates it and `app/pubspec.yaml`; `scripts/check-version.sh` (run by CI)
 `Cargo.toml`, `pubspec.yaml` and the newest `<release>` in the metainfo agree. The Inno Setup
 script takes the version from the command line, the About screen reads it from the core, and the
 git commit is embedded at build time (`SLYS_GIT_COMMIT` overrides it for tarball builds).
+
+## Looking at the UI without a display
+
+`app/test/layout_shots_test.dart` renders the real UI at several window sizes to PNG files, using
+the real Rust core. It is skipped unless you point it at the bridge library:
+
+```
+cargo build -p slys_bridge
+cd app
+SLYS_BRIDGE_LIB=../target/debug/libslys_bridge.so \
+FLUTTER_FONTS=<flutter-sdk>/bin/cache/artifacts/material_fonts \
+SLYS_CONFIG_DIR=$(mktemp -d) \
+flutter test test/layout_shots_test.dart --update-goldens      # writes test/shots/*.png
+```
+
+## Fuzzing
+
+```
+cargo install cargo-fuzz && rustup toolchain install nightly
+cd fuzz && cargo +nightly fuzz run seed_structured -- -max_total_time=300   # add -s none if ASan won't start
+```
+
+Targets: `seed_text`, `seed_structured`, `fragment_bytes`. A crash is a bug in the core: add the
+input as a regression test in `crates/slys-core/tests/security.rs`.

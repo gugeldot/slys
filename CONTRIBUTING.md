@@ -12,6 +12,18 @@ Thanks for looking. A few ground rules, mostly because this is security software
 * **Never weaken a safety rule**: verify before deleting, atomic writes, errors instead of
   guessing.
 
+## Secure development checklist
+
+Every pull request that touches parsing, cryptography, file creation or deletion, permissions or
+the workflows must (details in [docs/SECURITY_ARCHITECTURE.md](docs/SECURITY_ARCHITECTURE.md)):
+
+* treat seeds, fragments and file names as **hostile input** (errors, never panics; bounded work);
+* create files exclusively and with unguessable temporary names (no check-then-write races, no
+  following symlinks);
+* come with a test that fails without the change (see `crates/slys-core/tests/security.rs`);
+* keep `cargo deny check`, `cargo clippy -D warnings` and the tests green;
+* update the threat model / control table if a control is added, changed or removed.
+
 ## Workflow
 
 1. Fork, branch, make the change.
