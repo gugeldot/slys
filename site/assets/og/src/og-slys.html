@@ -1,0 +1,35 @@
+<!DOCTYPE html><html lang="en"><head><meta charset="utf-8"><title>OG - SLYS</title>
+<style>
+*{margin:0;padding:0;box-sizing:border-box}
+html,body{width:1200px;height:627px;overflow:hidden}
+body{background:#181818;color:#fff;font-family:'Open Sans','DejaVu Sans',Arial,sans-serif;position:relative;text-align:center}
+body::before{content:'';position:absolute;inset:0;background:radial-gradient(ellipse 70% 55% at 50% 0%,rgba(147,39,255,.42),transparent 70%),radial-gradient(ellipse 80% 45% at 50% 100%,rgba(147,39,255,.38),transparent 72%)}
+body::after{content:'';position:absolute;inset:28px;border:1px solid rgba(147,39,255,.4);border-radius:14px}
+.wrap{position:relative;z-index:1;height:100%;display:flex;flex-direction:column;align-items:center;padding-top:62px}
+/* the brand PNG also contains its own tagline; this crop is the wordmark only */
+.logo{width:800px;height:230px;background:url(../../brand/slys-wordmark.png) center/contain no-repeat;filter:drop-shadow(0 10px 40px rgba(147,39,255,.5))}
+h1{margin-top:14px;font-size:56px;font-weight:700;letter-spacing:.3px}
+p{margin-top:10px;font-size:25px;color:#c4c4c4}
+/* the idea of the product: a file cut into scattered encrypted pieces */
+.row{position:absolute;left:0;right:0;bottom:92px;height:96px}
+.row i{position:absolute;display:block;width:14px;height:58px;border-radius:3px;background:linear-gradient(160deg,#6a2bc4,#9327ff);box-shadow:0 0 16px rgba(147,39,255,.55)}
+.url{position:absolute;bottom:50px;left:0;right:0;z-index:1;font-family:'JetBrains Mono','DejaVu Sans Mono',monospace;font-size:20px;color:#8f8f8f}
+</style></head><body>
+<div class="wrap"><div class="logo" role="img" aria-label="SLYS"></div><h1>Fragment &amp; Encrypt Your Files</h1><p>Only your password and your seed bring them back · Rust + Flutter</p></div>
+<div class="row" id="row"></div>
+<div class="url">gugeldot.github.io/slys-web</div>
+<script>
+/* deterministic scatter so every render is identical */
+var s=7,rnd=function(){s=(s*16807)%2147483647;return s/2147483647};
+var row=document.getElementById('row'),n=38;
+for(var i=0;i<n;i++){
+  var e=document.createElement('i');
+  var x=70+i*(1060/(n-1))+(rnd()-.5)*28;
+  var y=(rnd()-.5)*74+19;
+  e.style.left=x+'px';e.style.top=y+'px';
+  e.style.transform='rotate('+((rnd()-.5)*84).toFixed(0)+'deg)';
+  e.style.opacity=(.55+rnd()*.45).toFixed(2);
+  row.appendChild(e);
+}
+</script>
+</body></html>

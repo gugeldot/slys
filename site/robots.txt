@@ -1,0 +1,4 @@
+User-agent: *
+Allow: /
+
+Sitemap: https://gugeldot.github.io/slys-web/sitemap.xml
