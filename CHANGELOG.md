@@ -36,6 +36,9 @@ Format: [Keep a Changelog](https://keepachangelog.com/). Versions follow [SemVer
   residual risks.
 
 ### Interface
+- Fragment and Recompose fill the window: two columns with a divider on wide windows, stacked on
+  narrow ones, and an action bar pinned to the bottom with the button and what is still missing.
+- Icons and tutorial step markers are white with outlines instead of filled accent colour.
 - Fragment and Recompose are separate tabs.
 - Drag a file (or folder) from the file manager onto the Target file, Output folder and
   "Where are the pieces?" boxes instead of using Browse.

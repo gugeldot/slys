@@ -192,6 +192,9 @@ class FragButton extends StatelessWidget {
   final void Function()? onClearFields;
   final String? repeatPassword;
 
+  /// Show the "what is missing" line under the button (the action bar shows it itself).
+  final bool showReason;
+
   const FragButton({
     super.key,
     required this.selectedFilePath,
@@ -202,6 +205,7 @@ class FragButton extends StatelessWidget {
     this.onSeedAdded,
     this.onClearFields,
     required this.repeatPassword,
+    this.showReason = true,
   });
 
   /// Why the button is disabled, in plain words (null when it can be pressed).
@@ -219,10 +223,7 @@ class FragButton extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final reason = disabledReason;
-    return Column(
-      crossAxisAlignment: CrossAxisAlignment.stretch,
-      children: [
-        FilledButton(
+    final button = FilledButton(
           style: primaryButtonStyle(),
           onPressed:
               reason != null
@@ -279,7 +280,12 @@ class FragButton extends StatelessWidget {
             'Slys!',
             style: TextStyle(fontWeight: FontWeight.bold, fontSize: 16),
           ),
-        ),
+        );
+    if (!showReason) return button;
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.stretch,
+      children: [
+        button,
         if (reason != null)
           Padding(
             padding: const EdgeInsets.only(top: 6),

@@ -36,36 +36,32 @@ Widget getTabContent({
 }) {
   switch (selectedTabIndex) {
     case 0:
-      return _page(
-        fragmentScreen(
-          selectedFilePath: selectedFilePath,
-          onFileSelected: onFileSelected,
-          selectedOutputPath: selectedOutputPath,
-          onOutputPathSelected: onOutputPathSelected,
-          encryptionLevel: encryptionLevel,
-          onEncryptionLevelChanged: onEncryptionLevelChanged,
-          password: password,
-          onPasswordChangedText: onPasswordChangedText,
-          passwordController: passwordController,
-          fragmentSize: fragmentSize,
-          onFragmentSizeChanged: onFragmentSizeChanged,
-          repeatPassword: repeatPassword,
-          repeatPasswordController: repeatPasswordController,
-          onRepeatPasswordChanged: onRepeatPasswordChanged,
-        ),
+      return fragmentScreen(
+        selectedFilePath: selectedFilePath,
+        onFileSelected: onFileSelected,
+        selectedOutputPath: selectedOutputPath,
+        onOutputPathSelected: onOutputPathSelected,
+        encryptionLevel: encryptionLevel,
+        onEncryptionLevelChanged: onEncryptionLevelChanged,
+        password: password,
+        onPasswordChangedText: onPasswordChangedText,
+        passwordController: passwordController,
+        fragmentSize: fragmentSize,
+        onFragmentSizeChanged: onFragmentSizeChanged,
+        repeatPassword: repeatPassword,
+        repeatPasswordController: repeatPasswordController,
+        onRepeatPasswordChanged: onRepeatPasswordChanged,
       );
     case 1:
-      return _page(
-        recomposeScreen(
-          selectedSeed: selectedSeed,
-          selectedSeedIndex: selectedSeedIndex,
-          onSeedSelected: onSeedSelected,
-          recomposePassword: recomposePassword,
-          recomposePasswordController: recomposePasswordController,
-          onRecomposePasswordChanged: onRecomposePasswordChanged,
-          recomposeOutputPath: recomposeOutputPath,
-          onRecomposeOutputPathSelected: onRecomposeOutputPathSelected,
-        ),
+      return recomposeScreen(
+        selectedSeed: selectedSeed,
+        selectedSeedIndex: selectedSeedIndex,
+        onSeedSelected: onSeedSelected,
+        recomposePassword: recomposePassword,
+        recomposePasswordController: recomposePasswordController,
+        onRecomposePasswordChanged: onRecomposePasswordChanged,
+        recomposeOutputPath: recomposeOutputPath,
+        onRecomposeOutputPathSelected: onRecomposeOutputPathSelected,
       );
     case 2:
       return _page(const SettingsScreen());

@@ -94,7 +94,7 @@ class _Flow extends StatelessWidget {
   Widget build(BuildContext context) {
     return AppCard(
       title: title,
-      trailing: Icon(icon, color: AppTheme.accent),
+      trailing: Icon(icon, color: AppTheme.white),
       child: Column(
         children: [
           for (var i = 0; i < steps.length; i++)
@@ -128,13 +128,13 @@ class _Step extends StatelessWidget {
                   height: 32,
                   alignment: Alignment.center,
                   decoration: BoxDecoration(
-                    color: AppTheme.accent,
                     shape: BoxShape.circle,
+                    border: Border.all(color: AppTheme.white, width: 2),
                   ),
                   child: Text(
                     '$number',
                     style: TextStyle(
-                      color: AppTheme.onAccent,
+                      color: AppTheme.white,
                       fontWeight: FontWeight.bold,
                     ),
                   ),

@@ -112,7 +112,7 @@ class _InfoChip extends StatelessWidget {
       child: Row(
         mainAxisSize: MainAxisSize.min,
         children: [
-          Icon(icon, size: 18, color: AppTheme.accent),
+          Icon(icon, size: 18, color: AppTheme.white),
           const SizedBox(width: 8),
           Column(
             crossAxisAlignment: CrossAxisAlignment.start,
@@ -150,7 +150,7 @@ class _Point extends StatelessWidget {
       child: Row(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          Icon(icon, color: AppTheme.accent, size: 22),
+          Icon(icon, color: AppTheme.white, size: 22),
           const SizedBox(width: 12),
           Expanded(
             child: Column(
