@@ -1,3 +1,5 @@
+import 'dart:async';
+
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 import '../../custom/theme.dart';
@@ -10,6 +12,9 @@ import '../../services/default_paths.dart';
 import '../../services/operation_runner.dart';
 import '../../services/startup_state.dart';
 import '../settings/settings.dart';
+
+/// How long the slide between tabs takes.
+const Duration _kSlide = Duration(milliseconds: 260);
 
 class HomeScreen extends StatefulWidget {
   const HomeScreen({super.key});
@@ -68,16 +73,16 @@ class _HomeScreenState extends State<HomeScreen> {
     super.initState();
 
     WidgetsBinding.instance.addPostFrameCallback((_) async {
-    if (inactivityWipedAtStartup && mounted) {
-      inactivityWipedAtStartup = false;
-      await showMessage(
-        context,
-        'Saved seeds erased',
-        'SLYS was not opened for the number of days set in the inactivity wipe, so the list of saved '
-        'seeds was erased. Your pieces were not touched. Add a seed again from the Recompose tab '
-        'to rebuild a file.',
-      );
-    }
+      if (inactivityWipedAtStartup && mounted) {
+        inactivityWipedAtStartup = false;
+        await showMessage(
+          context,
+          'Saved seeds erased',
+          'SLYS was not opened for the number of days set in the inactivity wipe, so the list of saved '
+              'seeds was erased. Your pieces were not touched. Add a seed again from the Recompose tab '
+              'to rebuild a file.',
+        );
+      }
       final prefs = await SharedPreferences.getInstance();
       setState(() {
         selectedOutputPath = _pathOrDefault(
@@ -108,12 +113,66 @@ class _HomeScreenState extends State<HomeScreen> {
     (label: 'About', icon: Icons.info_outline),
   ];
 
+  int _slideDirection =
+      1; // 1: the new tab comes from the right, -1: from the left
+  bool _switching = false;
+  Timer? _switchTimer;
+
+  @override
+  void dispose() {
+    _switchTimer?.cancel();
+    super.dispose();
+  }
+
   Future<void> _selectTab(int index) async {
+    // Ignore taps while the previous slide is still running: two copies of the same page
+    // (and their GlobalKeys) must not exist at once.
+    if (index == selectedTabIndex || _switching) return;
+    _switching = true;
+    _switchTimer = Timer(
+      _kSlide + const Duration(milliseconds: 40),
+      () => _switching = false,
+    );
+    _slideDirection = index > selectedTabIndex ? 1 : -1;
     final cameFromSettings = selectedTabIndex == 2;
     setState(() => selectedTabIndex = index);
     // Back from Settings: pick up the defaults that may have changed there. (Switching between
     // Fragment and Recompose keeps whatever you already picked.)
     if (cameFromSettings && index <= 1) await refreshPrefsFromStorage();
+  }
+
+  /// The current tab slides in from the side it is on, the old one slides out the other way.
+  Widget _slidingTab(Widget content) {
+    final key = ValueKey<int>(selectedTabIndex);
+    return ClipRect(
+      child: AnimatedSwitcher(
+        duration: _kSlide,
+        switchInCurve: Curves.easeOutCubic,
+        switchOutCurve: Curves.easeOutCubic,
+        layoutBuilder:
+            (current, previous) => Stack(
+              fit: StackFit.expand,
+              children: [...previous, if (current != null) current],
+            ),
+        transitionBuilder: (child, animation) {
+          final incoming = child.key == key;
+          final offset = Tween<Offset>(
+            begin: Offset(
+              incoming
+                  ? _slideDirection.toDouble()
+                  : -_slideDirection.toDouble(),
+              0,
+            ),
+            end: Offset.zero,
+          ).animate(animation);
+          return SlideTransition(
+            position: offset,
+            child: FadeTransition(opacity: animation, child: child),
+          );
+        },
+        child: KeyedSubtree(key: key, child: content),
+      ),
+    );
   }
 
   Widget _tabBar() {
@@ -198,84 +257,86 @@ class _HomeScreenState extends State<HomeScreen> {
             appHeader(),
             _tabBar(),
             Expanded(
-              child: getTabContent(
-                selectedTabIndex: selectedTabIndex,
-                selectedFilePath: selectedFilePath,
-                selectedOutputPath: selectedOutputPath,
-                password: password,
-                passwordController: passwordController,
-                onFileSelected: (path) {
-                  setState(() {
-                    selectedFilePath = path;
-                  });
-                },
-                onOutputPathSelected: (path) {
-                  setState(() {
-                    selectedOutputPath = path;
-                  });
-                },
-                onPasswordChangedText: (value) {
-                  setState(() {
-                    password = value;
-                  });
-                },
-                encryptionLevel: encryptionLevel,
-                onEncryptionLevelChanged: (value) {
-                  setState(() {
-                    encryptionLevel = value ?? 'Total';
-                  });
-                },
-                fragmentSize: fragmentSize,
-                onFragmentSizeChanged: (val) {
-                  setState(() {
-                    fragmentSize = val;
-                  });
-                },
+              child: _slidingTab(
+                getTabContent(
+                  selectedTabIndex: selectedTabIndex,
+                  selectedFilePath: selectedFilePath,
+                  selectedOutputPath: selectedOutputPath,
+                  password: password,
+                  passwordController: passwordController,
+                  onFileSelected: (path) {
+                    setState(() {
+                      selectedFilePath = path;
+                    });
+                  },
+                  onOutputPathSelected: (path) {
+                    setState(() {
+                      selectedOutputPath = path;
+                    });
+                  },
+                  onPasswordChangedText: (value) {
+                    setState(() {
+                      password = value;
+                    });
+                  },
+                  encryptionLevel: encryptionLevel,
+                  onEncryptionLevelChanged: (value) {
+                    setState(() {
+                      encryptionLevel = value ?? 'Total';
+                    });
+                  },
+                  fragmentSize: fragmentSize,
+                  onFragmentSizeChanged: (val) {
+                    setState(() {
+                      fragmentSize = val;
+                    });
+                  },
 
-                // 👇 NUEVO
-                selectedSeed: selectedSeedGlobal,
-                selectedSeedIndex: selectedSeedIndexGlobal,
-                onSeedSelected: (seed, index) async {
-                  final shouldClearOutputPath =
-                      !(await hasRecomposePathInPrefs());
+                  // 👇 NUEVO
+                  selectedSeed: selectedSeedGlobal,
+                  selectedSeedIndex: selectedSeedIndexGlobal,
+                  onSeedSelected: (seed, index) async {
+                    final shouldClearOutputPath =
+                        !(await hasRecomposePathInPrefs());
 
-                  setState(() {
-                    selectedSeedGlobal = index == -1 ? null : seed;
-                    selectedSeedIndexGlobal = index == -1 ? null : index;
+                    setState(() {
+                      selectedSeedGlobal = index == -1 ? null : seed;
+                      selectedSeedIndexGlobal = index == -1 ? null : index;
 
-                    if (index == -1) {
-                      recomposePasswordController.clear();
-                      recomposePassword = null;
+                      if (index == -1) {
+                        recomposePasswordController.clear();
+                        recomposePassword = null;
 
-                      if (shouldClearOutputPath) {
-                        selectedRecomposeOutputPath = defaultFragmentsDir();
+                        if (shouldClearOutputPath) {
+                          selectedRecomposeOutputPath = defaultFragmentsDir();
+                        }
                       }
-                    }
-                  });
-                },
+                    });
+                  },
 
-                recomposePassword: recomposePassword,
-                recomposePasswordController: recomposePasswordController,
-                onRecomposePasswordChanged: (value) {
-                  setState(() {
-                    recomposePassword = value;
-                  });
-                },
+                  recomposePassword: recomposePassword,
+                  recomposePasswordController: recomposePasswordController,
+                  onRecomposePasswordChanged: (value) {
+                    setState(() {
+                      recomposePassword = value;
+                    });
+                  },
 
-                recomposeOutputPath: selectedRecomposeOutputPath,
-                onRecomposeOutputPathSelected: (String newPath) {
-                  setState(() {
-                    selectedRecomposeOutputPath = newPath;
-                  });
-                },
+                  recomposeOutputPath: selectedRecomposeOutputPath,
+                  onRecomposeOutputPathSelected: (String newPath) {
+                    setState(() {
+                      selectedRecomposeOutputPath = newPath;
+                    });
+                  },
 
-                repeatPassword: repeatPassword,
-                repeatPasswordController: repeatPasswordController,
-                onRepeatPasswordChanged: (value) {
-                  setState(() {
-                    repeatPassword = value;
-                  });
-                },
+                  repeatPassword: repeatPassword,
+                  repeatPasswordController: repeatPasswordController,
+                  onRepeatPasswordChanged: (value) {
+                    setState(() {
+                      repeatPassword = value;
+                    });
+                  },
+                ),
               ),
             ),
           ],

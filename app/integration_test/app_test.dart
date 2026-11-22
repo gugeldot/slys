@@ -74,4 +74,31 @@ void main() {
       expect(tester.widget<SwitchListTile>(toggle).value, isFalse, reason: 'cancel changes nothing');
     }
   });
+
+  testWidgets('changing tab slides the pages: both exist mid-way, one at the end', (tester) async {
+    SharedPreferences.setMockInitialValues({});
+    tester.view.physicalSize = const Size(1000, 900);
+    tester.view.devicePixelRatio = 1.0;
+    addTearDown(tester.view.reset);
+
+    await tester.pumpWidget(
+      ChangeNotifierProvider(create: (_) => ThemeNotifier(), child: const MyWidget()),
+    );
+    await tester.pump(const Duration(seconds: 1));
+
+    final slides = find.descendant(
+      of: find.byType(AnimatedSwitcher),
+      matching: find.byType(SlideTransition),
+    );
+    expect(slides, findsOneWidget);
+
+    await tester.tap(find.text('Recompose').first);
+    await tester.pump();
+    await tester.pump(const Duration(milliseconds: 100));
+    expect(slides, findsNWidgets(2), reason: 'the old page is still sliding out');
+
+    await tester.pump(const Duration(milliseconds: 400));
+    expect(slides, findsOneWidget);
+    expect(tester.takeException(), isNull);
+  });
 }

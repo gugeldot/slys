@@ -11,7 +11,10 @@ import '../../utils/app_styles.dart';
 import '../settings/settings.dart';
 import 'main_fn.dart';
 
-final ScrollController scrollController = ScrollController();
+// One controller per page: while switching tabs both pages exist for a moment, and a controller can
+// only drive one scroll view.
+final ScrollController fragmentScroll = ScrollController();
+final ScrollController recomposeScroll = ScrollController();
 final GlobalKey<SeedsTableState> seedsTableKey = GlobalKey<SeedsTableState>();
 
 // ---------------------------------------------------------------- layout pieces
@@ -74,15 +77,19 @@ class _Section extends StatelessWidget {
 
 /// A page: scrolling content filling the window, with an action bar pinned to the bottom.
 /// Wide windows get two columns with a divider; narrow ones stack the sections.
-Widget _page({required List<Widget> sections, required Widget bar}) {
+Widget _page({
+  required ScrollController controller,
+  required List<Widget> sections,
+  required Widget bar,
+}) {
   return Column(
     children: [
       Expanded(
         child: Scrollbar(
-          controller: scrollController,
+          controller: controller,
           thumbVisibility: true,
           child: SingleChildScrollView(
-            controller: scrollController,
+            controller: controller,
             padding: const EdgeInsets.fromLTRB(24, 20, 24, 20),
             child: Center(
               child: ConstrainedBox(
@@ -241,6 +248,7 @@ Widget fragmentScreen({
   );
 
   return _page(
+    controller: fragmentScroll,
     sections: [
       _Section(
         title: 'File',
@@ -339,6 +347,7 @@ Widget recomposeScreen({
   );
 
   return _page(
+    controller: recomposeScroll,
     sections: [
       _Section(
         title: 'Seeds',
