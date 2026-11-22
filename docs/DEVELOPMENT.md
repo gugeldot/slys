@@ -88,3 +88,12 @@ cd fuzz && cargo +nightly fuzz run seed_structured -- -max_total_time=300   # ad
 
 Targets: `seed_text`, `seed_structured`, `fragment_bytes`. A crash is a bug in the core: add the
 input as a regression test in `crates/slys-core/tests/security.rs`.
+
+## Building the Flatpak locally
+
+```
+flatpak-builder --user --disable-cache --force-clean --repo=repo build packaging/flatpak/io.github.gugeldot.Slys.yml
+```
+
+Use `--disable-cache`: with a local `path:` archive, `flatpak-builder` can silently reuse the
+bundle of a previous build and you end up testing old code. (CI starts from a clean cache.)
