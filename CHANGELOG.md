@@ -36,6 +36,15 @@ Format: [Keep a Changelog](https://keepachangelog.com/). Versions follow [SemVer
   residual risks.
 
 ### Interface
+- Settings has an **Inactivity wipe** card: on/off (off by default), the number of days (presets or a
+  custom value, 1-3650), the time left, and a confirmation before turning it on. If a wipe happens, the
+  next start says so.
+- The password has requirements that turn green as they are met (12+ characters, upper and lower
+  case, a number, a symbol, both passwords equal); Slys! stays disabled until all are met. Rebuilding
+  accepts any password.
+- The pieces slider glides when you click the track and the number counts up or down on the way.
+- Dragging files onto the app in a Flatpak: only plain file URIs are accepted, avoiding the portal
+  "Invalid transfer" error.
 - Fragment and Recompose fill the window: two columns with a divider on wide windows, stacked on
   narrow ones, and an action bar pinned to the bottom with the button and what is still missing.
 - Icons and tutorial step markers are white with outlines instead of filled accent colour.
@@ -70,7 +79,7 @@ Format: [Keep a Changelog](https://keepachangelog.com/). Versions follow [SemVer
 ### Added
 - `slys` command line tool for testing and scripting.
 - Best-effort secure deletion of the original and of consumed fragments.
-- Opt-in inactivity wipe of the saved-seeds list in the core and CLI (not in the UI yet).
+- Opt-in inactivity wipe of the saved-seeds list, in the core, the CLI and the app (Settings).
 - Windows installer (Inno Setup) and Flatpak packaging; CI and release pipelines with checksums
   and build provenance attestations.
 - Source code published under GPL-3.0-or-later.

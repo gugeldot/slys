@@ -37,8 +37,9 @@ void main() {
       await tester.runAsync(() async {
         try {
           await RustLib.init(externalLibrary: lib == null ? null : ExternalLibrary.open(lib));
-        } catch (_) {
-          // already initialised by a previous test in this process
+        } catch (e) {
+          // ignore: avoid_print
+          print('RUSTLIB INIT: $e');
         }
       });
       if (fonts != null) {
