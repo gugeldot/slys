@@ -1,0 +1,18 @@
+[package]
+name = "slys_bridge"
+description = "flutter_rust_bridge glue between the Flutter app and slys-core. No logic lives here."
+version.workspace = true
+edition.workspace = true
+license.workspace = true
+repository.workspace = true
+authors.workspace = true
+
+[lib]
+crate-type = ["cdylib", "staticlib", "lib"]
+
+[dependencies]
+slys-core = { path = "../slys-core" }
+flutter_rust_bridge = "=2.13.0"
+
+[lints.rust]
+unexpected_cfgs = { level = "warn", check-cfg = ['cfg(frb_expand)'] }

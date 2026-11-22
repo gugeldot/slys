@@ -1,6 +1,6 @@
 [workspace]
 resolver = "2"
-members = ["crates/slys-core", "crates/slys-cli"]
+members = ["crates/slys-core", "crates/slys-cli", "crates/slys-bridge"]
 
 [workspace.package]
 # Single source of truth for the version. `scripts/set-version.sh` propagates it
