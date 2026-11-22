@@ -1,6 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:shared_preferences/shared_preferences.dart';
-import 'package:file_picker/file_picker.dart';
+import '../../services/file_dialogs.dart';
 import '../../utils/app_styles.dart';
 import '../about/about_fn.dart';
 import '../../custom/theme.dart';
@@ -60,7 +60,7 @@ class _SettingsScreenState extends State<SettingsScreen> {
   }
 
   Future<void> _updatePath(String key, void Function(String?) setStateCallback) async {
-    String? path = await FilePicker.platform.getDirectoryPath();
+    String? path = await pickDirectoryPath();
     if (path != null) {
       final prefs = await SharedPreferences.getInstance();
       await prefs.setString(key, path);

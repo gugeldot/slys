@@ -3,7 +3,7 @@ import '../../utils/app_styles.dart';
 import '../../custom/custom_widgets.dart';
 import '../about/about_fn.dart';
 import 'main_fn.dart';
-import 'package:file_picker/file_picker.dart';
+import '../../services/file_dialogs.dart';
 import 'package:flutter/services.dart';
 import '../settings/settings.dart';
 import 'package:shared_preferences/shared_preferences.dart';
@@ -236,7 +236,7 @@ Widget mainScreen({
                         ElevatedButton(
                           onPressed: selectedSeed != null
                               ? () async {
-                                  String? picked = await FilePicker.platform.getDirectoryPath();
+                                  String? picked = await pickDirectoryPath();
                                   if (picked != null) {
                                     onRecomposeOutputPathSelected(picked);
                                   }

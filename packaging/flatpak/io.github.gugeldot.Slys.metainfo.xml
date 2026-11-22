@@ -1,0 +1,41 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<component type="desktop-application">
+  <id>io.github.gugeldot.Slys</id>
+  <metadata_license>CC0-1.0</metadata_license>
+  <project_license>GPL-3.0-or-later</project_license>
+  <name>SLYS</name>
+  <summary>Fragment and encrypt your files</summary>
+  <developer id="io.github.gugeldot">
+    <name>Gugeldot</name>
+  </developer>
+  <description>
+    <p>
+      SLYS splits a file into encrypted pieces. To get the file back you need the seed, the
+      password and the pieces. Without all three, the data cannot be rebuilt.
+    </p>
+    <ul>
+      <li>Every fragment is encrypted and authenticated with AES-256-GCM; the key comes from your password with Argon2id.</li>
+      <li>Any change to a fragment is detected, and nothing is deleted until the rebuilt file has been verified.</li>
+      <li>Seeds made by SLYS 1.x can still be used.</li>
+    </ul>
+  </description>
+  <launchable type="desktop-id">io.github.gugeldot.Slys.desktop</launchable>
+  <url type="homepage">https://gugeldot.github.io/slys-web/</url>
+  <url type="bugtracker">https://github.com/gugeldot/slys/issues</url>
+  <url type="vcs-browser">https://github.com/gugeldot/slys</url>
+  <content_rating type="oars-1.1"/>
+  <categories>
+    <category>Utility</category>
+    <category>Security</category>
+  </categories>
+  <provides>
+    <binary>slys</binary>
+  </provides>
+  <releases>
+    <release version="1.6.0" date="2026-11-22">
+      <description>
+        <p>Rebuilt on a single Rust core, with a new authenticated seed format. Seeds from 1.x still work.</p>
+      </description>
+    </release>
+  </releases>
+</component>

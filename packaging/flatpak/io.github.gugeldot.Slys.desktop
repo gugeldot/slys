@@ -1,0 +1,11 @@
+[Desktop Entry]
+Type=Application
+Name=SLYS
+GenericName=File fragmenter
+Comment=Fragment and encrypt your files. Rebuild them with a seed and a password.
+Exec=slys
+Icon=io.github.gugeldot.Slys
+Terminal=false
+Categories=Utility;Security;
+Keywords=encryption;security;privacy;fragment;files;
+StartupWMClass=io.github.gugeldot.Slys

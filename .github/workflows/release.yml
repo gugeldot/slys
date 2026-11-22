@@ -1,0 +1,145 @@
+name: Release
+
+# Push a tag like v1.6.0 to build everything and create a DRAFT release.
+# Review the draft (checksums, attestations, install tests) and publish it by hand.
+on:
+  push:
+    tags: ["v*"]
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  check:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - name: Tag matches the version in the repository
+        run: scripts/check-version.sh "${GITHUB_REF_NAME}"
+        if: startsWith(github.ref, 'refs/tags/')
+
+  windows:
+    needs: check
+    runs-on: windows-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: dtolnay/rust-toolchain@stable
+      - uses: Swatinem/rust-cache@v2
+      - uses: subosito/flutter-action@v2
+        with:
+          channel: stable
+          cache: true
+      - name: Build
+        working-directory: app
+        shell: pwsh
+        run: |
+          flutter pub get
+          flutter build windows --release
+      - name: Bundle the Visual C++ runtime next to the app (app-local deployment)
+        shell: pwsh
+        run: |
+          $rel = "app\build\windows\x64\runner\Release"
+          foreach ($d in 'msvcp140.dll','vcruntime140.dll','vcruntime140_1.dll') {
+            Copy-Item "C:\Windows\System32\$d" $rel
+          }
+      # Code signing: see docs/SIGNING.md. Sign the .exe files before building the installer and
+      # the installer itself once a certificate (e.g. SignPath Foundation) is available.
+      - name: Installer (Inno Setup)
+        shell: pwsh
+        run: |
+          $ver = (Select-String -Path Cargo.toml -Pattern '^version = "(.*)"' | Select-Object -First 1).Matches.Groups[1].Value
+          iscc "/DAppVersion=$ver" packaging\windows\slys.iss
+      - name: Portable ZIP
+        shell: pwsh
+        run: Compress-Archive -Path app\build\windows\x64\runner\Release\* -DestinationPath dist\Slys_Windows_Portable.zip
+      - uses: actions/upload-artifact@v4
+        with:
+          name: windows
+          path: |
+            dist/Slys_Installer.exe
+            dist/Slys_Windows_Portable.zip
+
+  linux:
+    needs: check
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: dtolnay/rust-toolchain@stable
+      - uses: Swatinem/rust-cache@v2
+      - uses: subosito/flutter-action@v2
+        with:
+          channel: stable
+          cache: true
+      - name: System packages
+        run: sudo apt-get update && sudo apt-get install -y clang cmake ninja-build pkg-config libgtk-3-dev
+      - name: Build
+        working-directory: app
+        run: |
+          flutter pub get
+          flutter build linux --release
+      - name: Archives
+        run: |
+          mkdir -p dist
+          bundle=app/build/linux/x64/release/bundle
+          (cd "$bundle" && zip -qr "$GITHUB_WORKSPACE/dist/Slys_Linux.zip" .)
+          tar -czf dist/slys-linux-x64.tar.gz -C "$bundle" .
+      - uses: actions/upload-artifact@v4
+        with:
+          name: linux
+          path: |
+            dist/Slys_Linux.zip
+            dist/slys-linux-x64.tar.gz
+
+  flatpak:
+    needs: linux
+    runs-on: ubuntu-latest
+    container:
+      image: ghcr.io/flathub-infra/flatpak-github-actions:gnome-49
+      options: --privileged
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/download-artifact@v4
+        with:
+          name: linux
+          path: packaging/flatpak
+      - uses: flatpak/flatpak-github-actions/flatpak-builder@v6
+        with:
+          bundle: Slys.flatpak
+          manifest-path: packaging/flatpak/io.github.gugeldot.Slys.yml
+          cache-key: flatpak-builder-${{ github.sha }}
+      - uses: actions/upload-artifact@v4
+        with:
+          name: flatpak
+          path: Slys.flatpak
+
+  publish:
+    needs: [windows, linux, flatpak]
+    runs-on: ubuntu-latest
+    permissions:
+      contents: write
+      id-token: write
+      attestations: write
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/download-artifact@v4
+        with:
+          path: staging
+      - name: Collect assets and checksums
+        run: |
+          mkdir dist
+          cp staging/windows/Slys_Installer.exe staging/windows/Slys_Windows_Portable.zip dist/
+          cp staging/linux/Slys_Linux.zip staging/flatpak/Slys.flatpak dist/
+          scripts/make-checksums.sh dist
+      - name: Provenance attestation (who built these files, from which commit)
+        uses: actions/attest-build-provenance@v2
+        with:
+          subject-path: dist/*
+      - name: Draft release
+        if: startsWith(github.ref, 'refs/tags/')
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: |
+          gh release create "$GITHUB_REF_NAME" dist/* --draft --verify-tag \
+            --title "SLYS ${GITHUB_REF_NAME#v}" \
+            --notes "See CHANGELOG.md. Verify downloads with SHA256SUMS or: gh attestation verify <file> --repo ${GITHUB_REPOSITORY}"

@@ -1,6 +1,6 @@
 
 import 'package:flutter/material.dart';
-import 'package:file_picker/file_picker.dart';
+import '../../services/file_dialogs.dart';
 import '../../utils/app_styles.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 import '../../services/operation_runner.dart';
@@ -42,11 +42,10 @@ class TargetFileSelector extends StatefulWidget {
 
 class _TargetFileSelectorState extends State<TargetFileSelector> {
   void _pickFile() async {
-    final result = await FilePicker.platform.pickFiles();
+    final path = await pickFilePath();
 
-    if (result != null && result.files.single.path != null) {
-      final path = result.files.single.path!;
-      widget.onFileSelected(path); 
+    if (path != null) {
+      widget.onFileSelected(path);
     }
   }
 
@@ -108,7 +107,7 @@ class OutputPathSelector extends StatefulWidget {
 
 class _OutputPathSelectorState extends State<OutputPathSelector> {
   void _pickDirectory() async {
-    final result = await FilePicker.platform.getDirectoryPath();
+    final result = await pickDirectoryPath();
 
     if (result != null) {
       widget.onPathSelected(result);
@@ -581,7 +580,7 @@ class RecomposeButton extends StatelessWidget {
 
               // 👉 Si no existe, pedirlo manualmente
               if (outputPath == null || outputPath.isEmpty) {
-                outputPath = await FilePicker.platform.getDirectoryPath();
+                outputPath = await pickDirectoryPath();
                 if (outputPath == null) return; // Usuario canceló
               }
 

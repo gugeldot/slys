@@ -1,0 +1,39 @@
+# Flatpak manifest. It packages the bundle produced by `flutter build linux --release`
+# (CI builds it first and drops it next to this file as slys-linux-x64.tar.gz).
+# Building Flutter inside flatpak-builder (needed for Flathub) is a later step: see docs/RELEASING.md.
+app-id: io.github.gugeldot.Slys
+runtime: org.gnome.Platform
+runtime-version: '49'
+sdk: org.gnome.Sdk
+command: slys
+
+finish-args:
+  - --share=ipc
+  - --socket=wayland
+  - --socket=fallback-x11
+  - --device=dri
+  # SLYS is a file tool: it reads the file you pick and writes the fragments where you choose.
+  # The home folder is the least-surprising scope; there is no network access at all.
+  - --filesystem=home
+
+modules:
+  - name: slys
+    buildsystem: simple
+    build-commands:
+      - install -d /app/lib/slys
+      - cp -r ./* /app/lib/slys/
+      - install -d /app/bin
+      - ln -s /app/lib/slys/slys /app/bin/slys
+      - install -Dm644 io.github.gugeldot.Slys.desktop /app/share/applications/io.github.gugeldot.Slys.desktop
+      - install -Dm644 io.github.gugeldot.Slys.metainfo.xml /app/share/metainfo/io.github.gugeldot.Slys.metainfo.xml
+      - install -Dm644 io.github.gugeldot.Slys.png /app/share/icons/hicolor/512x512/apps/io.github.gugeldot.Slys.png
+    sources:
+      - type: archive
+        path: slys-linux-x64.tar.gz
+        strip-components: 0
+      - type: file
+        path: io.github.gugeldot.Slys.desktop
+      - type: file
+        path: io.github.gugeldot.Slys.metainfo.xml
+      - type: file
+        path: ../icons/io.github.gugeldot.Slys.png
