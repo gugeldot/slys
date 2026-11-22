@@ -15,6 +15,13 @@ finish-args:
   # SLYS is a file tool: it reads the file you pick and writes the fragments where you choose.
   # The home folder is the least-surprising scope; there is no network access at all.
   - --filesystem=home
+  # ...but never the places where other programs keep their secrets (least privilege).
+  - --nofilesystem=~/.ssh
+  - --nofilesystem=~/.gnupg
+  - --nofilesystem=~/.aws
+  - --nofilesystem=~/.kube
+  - --nofilesystem=~/.password-store
+  - --nofilesystem=~/.local/share/keyrings
 
 modules:
   - name: slys

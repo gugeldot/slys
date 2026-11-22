@@ -1,0 +1,57 @@
+# Supply-chain policy, checked in CI on every push and weekly (cargo-deny).
+# ISO 27002:2022 8.8 (technical vulnerabilities), 5.19-5.21 (suppliers / ICT supply chain),
+# 8.30 (outsourced development), 8.19 (software installation).
+
+[advisories]
+version = 2
+# Known vulnerabilities fail the build. Unmaintained / yanked crates are reported.
+yanked = "deny"
+unmaintained = "workspace"
+# Every ignore needs a reason and an expiry review. There are none today.
+ignore = []
+
+[licenses]
+version = 2
+# SLYS is GPL-3.0-or-later; everything here is compatible with it.
+allow = [
+    "GPL-3.0-or-later",
+    "MIT",
+    "Apache-2.0",
+    "Apache-2.0 WITH LLVM-exception",
+    "BSD-2-Clause",
+    "BSD-3-Clause",
+    "Zlib",
+    "Unicode-3.0",
+    "MPL-2.0",
+]
+confidence-threshold = 0.9
+
+[bans]
+multiple-versions = "warn"
+wildcards = "deny"
+# Workspace members refer to each other by path.
+allow-wildcard-paths = true
+# SLYS never talks to the network (README, SECURITY.md). If one of these ever enters the
+# dependency tree, the build fails and somebody has to justify it in review.
+# (tokio is allowed: flutter_rust_bridge uses it as an executor, without network features.)
+deny = [
+    { crate = "reqwest" },
+    { crate = "hyper" },
+    { crate = "hyper-util" },
+    { crate = "ureq" },
+    { crate = "isahc" },
+    { crate = "surf" },
+    { crate = "attohttpc" },
+    { crate = "curl" },
+    { crate = "curl-sys" },
+    { crate = "openssl" },
+    { crate = "openssl-sys" },
+    { crate = "native-tls" },
+    { crate = "rustls" },
+]
+
+[sources]
+unknown-registry = "deny"
+unknown-git = "deny"
+allow-registry = ["https://github.com/rust-lang/crates.io-index"]
+allow-git = []
