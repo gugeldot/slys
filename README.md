@@ -3,7 +3,7 @@
 
 **Fragment and encrypt your files. Rebuild them with a seed and a password.**
 
-[Website](https://gugeldot.github.io/slys-web/) · [Download](https://github.com/gugeldot/slys/releases) · [Security](SECURITY.md) · [Format](docs/FORMAT.md)
+[Website](https://gugeldot.github.io/slys/) · [Download](https://github.com/gugeldot/slys/releases) · [Security](SECURITY.md) · [Format](docs/FORMAT.md)
 </div>
 
 ## What it does

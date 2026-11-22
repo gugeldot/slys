@@ -19,7 +19,8 @@
 
    Every asset also gets a build provenance attestation (`gh attestation verify`).
 6. Install-test the draft on a clean Windows and a clean Linux, then publish it.
-7. Update the website's download section and checksums (`tools/fill-checksums.py` in `slys-web`).
+7. Update the website (`site/`): version, download section and checksums (`site/tools/fill-checksums.py
+   SHA256SUMS`); see `site/README.md`. Pushing to `main` publishes it with GitHub Pages.
 
 ## First release: check the pipelines without touching `main`
 
