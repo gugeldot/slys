@@ -39,6 +39,10 @@ Format: [Keep a Changelog](https://keepachangelog.com/). Versions follow [SemVer
 - Settings has an **Inactivity wipe** card: on/off (off by default), the number of days (presets or a
   custom value, 1-3650), the time left, and a confirmation before turning it on. If a wipe happens, the
   next start says so.
+- While the cursor is in a password field, the requirements not met yet turn red (neutral otherwise);
+  the "Passwords do not match" line is gone because it shifted the whole page when it appeared.
+- The Donate button no longer throws inside a Flatpak: it opens the browser through the portal, and if that
+  fails it copies the link and says so.
 - The password has requirements that turn green as they are met (12+ characters, upper and lower
   case, a number, a symbol, both passwords equal); Slys! stays disabled until all are met. Rebuilding
   accepts any password.

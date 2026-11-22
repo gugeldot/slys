@@ -95,7 +95,7 @@ class OutputPathSelector extends StatelessWidget {
   }
 }
 
-class PasswordAndEncryptionOptions extends StatelessWidget {
+class PasswordAndEncryptionOptions extends StatefulWidget {
   final String encryptionLevel;
   final void Function(String?) onEncryptionChanged;
 
@@ -119,10 +119,29 @@ class PasswordAndEncryptionOptions extends StatelessWidget {
     required this.repeatPasswordController,
   });
 
-  bool get _mismatch =>
-      (password?.isNotEmpty ?? false) &&
-      (repeatPassword?.isNotEmpty ?? false) &&
-      password != repeatPassword;
+  @override
+  State<PasswordAndEncryptionOptions> createState() => _PasswordAndEncryptionOptionsState();
+}
+
+class _PasswordAndEncryptionOptionsState extends State<PasswordAndEncryptionOptions> {
+  final _passwordFocus = FocusNode();
+  final _repeatFocus = FocusNode();
+
+  @override
+  void initState() {
+    super.initState();
+    _passwordFocus.addListener(_focusChanged);
+    _repeatFocus.addListener(_focusChanged);
+  }
+
+  @override
+  void dispose() {
+    _passwordFocus.dispose();
+    _repeatFocus.dispose();
+    super.dispose();
+  }
+
+  void _focusChanged() => setState(() {});
 
   @override
   Widget build(BuildContext context) {
@@ -133,20 +152,27 @@ class PasswordAndEncryptionOptions extends StatelessWidget {
           minChildWidth: 220,
           children: [
             PasswordField(
-              controller: passwordController,
+              controller: widget.passwordController,
+              focusNode: _passwordFocus,
               label: 'Password',
-              onChanged: onPasswordChangedText,
+              onChanged: widget.onPasswordChangedText,
             ),
+            // No error text here: a line popping in would push the whole page down. The
+            // "Both passwords match" requirement below says it instead.
             PasswordField(
-              controller: repeatPasswordController,
+              controller: widget.repeatPasswordController,
+              focusNode: _repeatFocus,
               label: 'Repeat password',
-              onChanged: onRepeatPasswordChanged,
-              errorText: _mismatch ? 'Passwords do not match' : null,
+              onChanged: widget.onRepeatPasswordChanged,
             ),
           ],
         ),
         const SizedBox(height: 12),
-        PasswordChecklist(password: password ?? '', repeat: repeatPassword ?? ''),
+        PasswordChecklist(
+          password: widget.password ?? '',
+          repeat: widget.repeatPassword ?? '',
+          showUnmet: _passwordFocus.hasFocus || _repeatFocus.hasFocus,
+        ),
         const SizedBox(height: 16),
         InputDecorator(
           decoration: InputDecoration(
@@ -162,7 +188,7 @@ class PasswordAndEncryptionOptions extends StatelessWidget {
           child: DropdownButtonHideUnderline(
             child: DropdownButton<String>(
               isExpanded: true,
-              value: encryptionLevel,
+              value: widget.encryptionLevel,
               dropdownColor: AppTheme.grey2,
               style: Theme.of(
                 context,
@@ -176,7 +202,7 @@ class PasswordAndEncryptionOptions extends StatelessWidget {
                         ),
                       )
                       .toList(),
-              onChanged: onEncryptionChanged,
+              onChanged: widget.onEncryptionChanged,
             ),
           ),
         ),

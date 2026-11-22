@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:flutter/services.dart';
 import 'package:url_launcher/url_launcher.dart';
 
 import '../../utils/app_styles.dart';
@@ -95,19 +96,31 @@ class PayPalDonateButton extends StatelessWidget {
     required this.donationUrl,
   });
 
-  void _launchDonationUrl() async {
-    final uri = Uri.parse(donationUrl);
-    if (await canLaunchUrl(uri)) {
-      await launchUrl(uri, mode: LaunchMode.externalApplication);
-    } else {
-      throw 'Could not launch PayPal URL';
+  /// Opens the link in the browser. It does not ask `canLaunchUrl` first: inside a Flatpak that
+  /// check says "no" even though the portal can open the link. If opening fails for any reason,
+  /// the link is copied to the clipboard and the user is told, instead of throwing.
+  Future<void> _launchDonationUrl(BuildContext context) async {
+    var opened = false;
+    try {
+      opened = await launchUrl(Uri.parse(donationUrl), mode: LaunchMode.externalApplication);
+    } catch (_) {
+      opened = false;
     }
+    if (opened || !context.mounted) return;
+    await Clipboard.setData(ClipboardData(text: donationUrl));
+    if (!context.mounted) return;
+    ScaffoldMessenger.of(context).showSnackBar(
+      const SnackBar(
+        content: Text('Could not open the browser. The link was copied to the clipboard.'),
+        duration: Duration(seconds: 5),
+      ),
+    );
   }
 
   @override
   Widget build(BuildContext context) {
     return ElevatedButton.icon(
-      onPressed: _launchDonationUrl,
+      onPressed: () => _launchDonationUrl(context),
       icon: const Icon(Icons.favorite, color: Colors.redAccent),
       label: const Text("Donate by PayPal"),
       style: ElevatedButton.styleFrom(

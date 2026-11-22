@@ -211,6 +211,7 @@ class PasswordField extends StatefulWidget {
   final ValueChanged<String> onChanged;
   final bool enabled;
   final String? errorText;
+  final FocusNode? focusNode;
 
   const PasswordField({
     super.key,
@@ -219,6 +220,7 @@ class PasswordField extends StatefulWidget {
     required this.onChanged,
     this.enabled = true,
     this.errorText,
+    this.focusNode,
   });
 
   @override
@@ -232,6 +234,7 @@ class _PasswordFieldState extends State<PasswordField> {
   Widget build(BuildContext context) {
     return TextField(
       controller: widget.controller,
+      focusNode: widget.focusNode,
       obscureText: _obscure,
       enabled: widget.enabled,
       onChanged: widget.onChanged,
@@ -306,11 +309,21 @@ class PasswordChecklist extends StatelessWidget {
   final String password;
   final String repeat;
 
-  const PasswordChecklist({super.key, required this.password, required this.repeat});
+  /// True while the cursor is in one of the password fields: requirements not met yet are then
+  /// shown in red. Otherwise they stay neutral, so the page does not shout before you start.
+  final bool showUnmet;
+
+  const PasswordChecklist({
+    super.key,
+    required this.password,
+    required this.repeat,
+    this.showUnmet = false,
+  });
 
   @override
   Widget build(BuildContext context) {
     final green = AppTheme.isDark ? Colors.greenAccent : Colors.green.shade700;
+    final red = AppTheme.isDark ? Colors.redAccent : Colors.red.shade700;
     return Wrap(
       spacing: 18,
       runSpacing: 6,
@@ -318,20 +331,23 @@ class PasswordChecklist extends StatelessWidget {
         for (final rule in passwordRules)
           Builder(builder: (context) {
             final ok = rule.met(password, repeat);
+            final color = ok ? green : (showUnmet ? red : AppTheme.shadow);
             return Row(
               mainAxisSize: MainAxisSize.min,
               children: [
                 AnimatedSwitcher(
                   duration: const Duration(milliseconds: 180),
                   child: Icon(
-                    ok ? Icons.check_circle : Icons.radio_button_unchecked,
-                    key: ValueKey(ok),
+                    ok
+                        ? Icons.check_circle
+                        : (showUnmet ? Icons.cancel : Icons.radio_button_unchecked),
+                    key: ValueKey('$ok$showUnmet'),
                     size: 18,
-                    color: ok ? green : AppTheme.shadow,
+                    color: color,
                   ),
                 ),
                 const SizedBox(width: 6),
-                Text(rule.label, style: TextStyle(color: ok ? green : AppTheme.shadow)),
+                Text(rule.label, style: TextStyle(color: color)),
               ],
             );
           }),
