@@ -10,10 +10,13 @@
 //!
 //! Security model, file formats and limitations: see `docs/FORMAT.md` and `SECURITY.md`.
 
+#![deny(unsafe_code)]
+
 pub mod crypto;
 pub mod error;
 pub mod format;
 mod fragment;
+pub mod hardening;
 pub mod inactivity;
 mod legacy;
 mod ops;

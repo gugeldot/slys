@@ -337,17 +337,32 @@ fn run(cli: Cli) -> Result<(), Box<dyn std::error::Error>> {
     Ok(())
 }
 
-/// Tests and CI can lower the Argon2 cost with SLYS_FAST_KDF=1. Never set it for real data.
+/// Key derivation cost for new seeds.
+///
+/// A switch that weakens Argon2 must not exist in the binaries people actually use (an
+/// environment variable set by a wrapper script would silently downgrade every new seed). The
+/// fast mode only exists in builds made with `--features insecure-fast-kdf` (tests, demos).
+#[cfg(feature = "insecure-fast-kdf")]
 fn kdf_from_env() -> KdfParams {
     if std::env::var_os("SLYS_FAST_KDF").is_some() {
         eprintln!("warning: SLYS_FAST_KDF is set: key derivation is weakened. Testing only.");
-        KdfParams::INSECURE_FAST
-    } else {
-        KdfParams::default()
+        return KdfParams::INSECURE_FAST;
     }
+    KdfParams::default()
+}
+
+#[cfg(not(feature = "insecure-fast-kdf"))]
+fn kdf_from_env() -> KdfParams {
+    if std::env::var_os("SLYS_FAST_KDF").is_some() {
+        eprintln!(
+            "note: SLYS_FAST_KDF is ignored: this build always uses the full key derivation."
+        );
+    }
+    KdfParams::default()
 }
 
 fn main() -> ExitCode {
+    slys_core::hardening::harden_process();
     match run(Cli::parse()) {
         Ok(()) => ExitCode::SUCCESS,
         Err(e) => {

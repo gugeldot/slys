@@ -15,6 +15,10 @@ use crate::error::{Error, Result};
 pub const KEY_LEN: usize = 32;
 pub const SALT_LEN: usize = 16;
 
+/// Most memory a seed may ask Argon2 for (512 MiB). Seeds can come from other people; this keeps
+/// a hostile one from exhausting RAM or CPU. The default is 64 MiB.
+pub(crate) const MAX_M_COST_KIB: u32 = 512 * 1024;
+
 /// Argon2id cost parameters. They are stored in the seed, so they can be raised in the future
 /// without breaking seeds that already exist.
 #[derive(Clone, Copy, Debug, PartialEq, Eq)]
@@ -53,9 +57,9 @@ impl KdfParams {
         if self.lanes == 0
             || self.lanes > 16
             || self.t_cost == 0
-            || self.t_cost > 32
+            || self.t_cost > 16
             || self.m_cost_kib < 8 * self.lanes as u32
-            || self.m_cost_kib > 1024 * 1024
+            || self.m_cost_kib > MAX_M_COST_KIB
         {
             return Err(Error::KdfParams);
         }

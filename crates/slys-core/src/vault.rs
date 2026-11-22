@@ -51,10 +51,18 @@ pub(crate) fn now() -> u64 {
 
 /// Atomic write: temp file + rename, owner-only permissions.
 pub(crate) fn write_atomic(path: &Path, bytes: &[u8]) -> Result<()> {
-    let tmp = path.with_extension("tmp");
+    let suffix: [u8; 6] = crate::crypto::random_bytes();
+    let tmp = path.with_extension(format!(
+        "{}.tmp",
+        suffix
+            .iter()
+            .map(|b| format!("{b:02x}"))
+            .collect::<String>()
+    ));
     {
+        // create_new: fail rather than write through something planted at the temp name.
         let mut opts = fs::OpenOptions::new();
-        opts.write(true).create(true).truncate(true);
+        opts.write(true).create_new(true);
         #[cfg(unix)]
         {
             use std::os::unix::fs::OpenOptionsExt;
@@ -64,7 +72,10 @@ pub(crate) fn write_atomic(path: &Path, bytes: &[u8]) -> Result<()> {
         f.write_all(bytes)?;
         f.sync_all()?;
     }
-    fs::rename(&tmp, path)?;
+    if let Err(e) = fs::rename(&tmp, path) {
+        let _ = fs::remove_file(&tmp);
+        return Err(e.into());
+    }
     Ok(())
 }
 

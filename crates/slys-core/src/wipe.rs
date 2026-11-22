@@ -31,7 +31,18 @@ pub fn secure_delete(path: &Path) -> Result<WipeOutcome> {
 
     let len = meta.len();
     {
-        let mut f = OpenOptions::new().write(true).open(path)?;
+        let mut opts = OpenOptions::new();
+        opts.write(true);
+        // Never follow a symlink swapped in between the check above and this open.
+        #[cfg(unix)]
+        {
+            use std::os::unix::fs::OpenOptionsExt;
+            opts.custom_flags(libc::O_NOFOLLOW);
+        }
+        let mut f = opts.open(path)?;
+        if !f.metadata()?.is_file() {
+            return Err(crate::error::Error::Storage("not a regular file".into()));
+        }
         let mut buf = vec![0u8; 1024 * 1024];
         // pass 1: random data
         overwrite(&mut f, len, &mut buf, true)?;

@@ -3,6 +3,7 @@ name = "slys_bridge"
 description = "flutter_rust_bridge glue between the Flutter app and slys-core. No logic lives here."
 version.workspace = true
 edition.workspace = true
+publish = false
 license.workspace = true
 repository.workspace = true
 authors.workspace = true

@@ -3,6 +3,7 @@ name = "slys-cli"
 description = "Command-line interface for SLYS: lets you test and script the core without the app."
 version.workspace = true
 edition.workspace = true
+publish = false
 license.workspace = true
 repository.workspace = true
 authors.workspace = true
@@ -11,9 +12,13 @@ authors.workspace = true
 name = "slys"
 path = "src/main.rs"
 
+[features]
+# Lets SLYS_FAST_KDF=1 weaken Argon2. For tests and demos only; never enabled in releases.
+insecure-fast-kdf = []
+
 [dependencies]
 slys-core = { path = "../slys-core" }
 clap = { version = "4", features = ["derive"] }
 rpassword = "7"
 zeroize = "1"
-indicatif = "0.17"
+indicatif = "0.18"

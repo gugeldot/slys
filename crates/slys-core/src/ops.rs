@@ -103,20 +103,83 @@ fn random_fragment_name() -> String {
     format!("{stem}.{FRAGMENT_EXTENSION}")
 }
 
-/// File names that are legal in a seed may not be legal on every OS.
+/// File names that are legal in a seed may not be legal on every OS. On Windows, characters
+/// that are not allowed are replaced and device names (`CON`, `NUL`, `COM1`...) are defused,
+/// because opening them would not create a file at all.
 pub(crate) fn output_file_name(name: &str) -> String {
     if cfg!(windows) {
-        name.chars()
-            .map(|c| {
-                if matches!(c, '<' | '>' | ':' | '"' | '|' | '?' | '*') {
-                    '_'
-                } else {
-                    c
-                }
-            })
-            .collect()
+        windows_safe_name(name)
     } else {
         name.to_string()
+    }
+}
+
+/// Pure function (not `cfg`-gated) so it is tested on every platform.
+pub(crate) fn windows_safe_name(name: &str) -> String {
+    let mut out: String = name
+        .chars()
+        .map(|c| {
+            if matches!(c, '<' | '>' | ':' | '"' | '|' | '?' | '*') || c.is_control() {
+                '_'
+            } else {
+                c
+            }
+        })
+        .collect();
+    // Windows silently strips trailing dots and spaces, which could change the file name.
+    let trimmed = out.trim_end_matches(['.', ' ']).len();
+    out.truncate(trimmed);
+    if out.is_empty() {
+        out.push('_');
+    }
+    let stem = out.split('.').next().unwrap_or("").to_ascii_uppercase();
+    const RESERVED: &[&str] = &[
+        "CON", "PRN", "AUX", "NUL", "CONIN$", "CONOUT$", "COM0", "COM1", "COM2", "COM3", "COM4",
+        "COM5", "COM6", "COM7", "COM8", "COM9", "LPT0", "LPT1", "LPT2", "LPT3", "LPT4", "LPT5",
+        "LPT6", "LPT7", "LPT8", "LPT9",
+    ];
+    if RESERVED.contains(&stem.as_str()) {
+        out.insert(0, '_');
+    }
+    out
+}
+
+/// Random suffix for temporary files, so their names cannot be guessed and pre-planted.
+pub(crate) fn random_suffix() -> String {
+    let b: [u8; 8] = crate::crypto::random_bytes();
+    b.iter().map(|x| format!("{x:02x}")).collect()
+}
+
+/// Creates a new file that must not exist yet. `create_new` is `O_EXCL`: it fails instead of
+/// following a symlink somebody planted at that name.
+pub(crate) fn create_exclusive(path: &Path) -> io::Result<File> {
+    OpenOptions::new().write(true).create_new(true).open(path)
+}
+
+/// Moves `tmp` to `dest`. Without `overwrite` it fails if `dest` already exists, atomically
+/// (a hard link cannot replace an existing name, unlike `rename`), so two processes racing for
+/// the same name cannot silently clobber each other.
+pub(crate) fn publish(tmp: &Path, dest: &Path, overwrite: bool) -> Result<()> {
+    if overwrite {
+        fs::rename(tmp, dest)?;
+        return Ok(());
+    }
+    match fs::hard_link(tmp, dest) {
+        Ok(()) => {
+            let _ = fs::remove_file(tmp);
+            Ok(())
+        }
+        Err(e) if e.kind() == io::ErrorKind::AlreadyExists => {
+            Err(Error::OutputExists(dest.display().to_string()))
+        }
+        Err(_) => {
+            // File systems without hard links (FAT/exFAT, some network shares): best effort.
+            if dest.symlink_metadata().is_ok() {
+                return Err(Error::OutputExists(dest.display().to_string()));
+            }
+            fs::rename(tmp, dest)?;
+            Ok(())
+        }
     }
 }
 
@@ -282,9 +345,9 @@ pub fn fragment(
                     break (name, path);
                 }
             };
-            let tmp = path.with_extension("slys.part");
+            let tmp = output_dir.join(format!(".slys-{}.part", random_suffix()));
             created.push(tmp.clone());
-            let file = OpenOptions::new().write(true).create_new(true).open(&tmp)?;
+            let file = create_exclusive(&tmp)?;
             let mut writer = HashWriter::new(BufWriter::new(file));
             let mut limited = (&mut reader).take(len);
             let mut tick = |n: u64| {
@@ -313,7 +376,7 @@ pub fn fragment(
                 .into_inner()
                 .map_err(|e| e.into_error())?
                 .sync_all()?;
-            fs::rename(&tmp, &path)?;
+            publish(&tmp, &path, false)?;
             created.pop();
             created.push(path);
             entries.push(FragmentEntry {
@@ -420,16 +483,17 @@ pub fn recompose(
     let opened = format::open(seed, password)?;
     let payload = opened.payload;
     let out_path = output_dir.join(output_file_name(&payload.original_name));
-    if out_path.exists() && !opts.overwrite {
+    // symlink_metadata: a dangling symlink at that name also counts as "exists".
+    if out_path.symlink_metadata().is_ok() && !opts.overwrite {
         return Err(Error::OutputExists(out_path.display().to_string()));
     }
     fs::create_dir_all(output_dir)?;
-    let tmp = out_path.with_extension("slys-part");
+    let tmp = output_dir.join(format!(".slys-{}.part", random_suffix()));
 
     let total = payload.original_size;
     let mut done = 0u64;
     let result = (|| -> Result<()> {
-        let mut writer = HashWriter::new(BufWriter::new(File::create(&tmp)?));
+        let mut writer = HashWriter::new(BufWriter::new(create_exclusive(&tmp)?));
         let mut tick = |n: u64| {
             done += n;
             progress(Progress {
@@ -459,7 +523,10 @@ pub fn recompose(
         let _ = fs::remove_file(&tmp);
         return Err(e);
     }
-    fs::rename(&tmp, &out_path)?;
+    if let Err(e) = publish(&tmp, &out_path, opts.overwrite) {
+        let _ = fs::remove_file(&tmp);
+        return Err(e);
+    }
 
     let (fragments_deleted, warnings) = delete_fragment_files(
         fragments_dir,
@@ -472,4 +539,54 @@ pub fn recompose(
         fragments_deleted,
         warnings,
     })
+}
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+
+    #[test]
+    fn windows_device_and_odd_names_are_defused() {
+        for (input, expected) in [
+            ("report.pdf", "report.pdf"),
+            ("CON", "_CON"),
+            ("con.txt", "_con.txt"),
+            ("NuL.tar.gz", "_NuL.tar.gz"),
+            ("COM1", "_COM1"),
+            ("lpt9.log", "_lpt9.log"),
+            ("a:b.txt", "a_b.txt"),
+            ("what?.txt", "what_.txt"),
+            ("file.txt.", "file.txt"),
+            ("file ", "file"),
+            ("...", "_"),
+            ("stream:hidden", "stream_hidden"),
+            ("console.txt", "console.txt"),
+        ] {
+            assert_eq!(windows_safe_name(input), expected, "{input}");
+        }
+    }
+
+    #[test]
+    fn publish_refuses_to_replace_unless_told() {
+        let d = tempfile::tempdir().unwrap();
+        let a = d.path().join("a");
+        let b = d.path().join("b");
+        fs::write(&a, b"new").unwrap();
+        fs::write(&b, b"old").unwrap();
+        assert!(matches!(
+            publish(&a, &b, false),
+            Err(Error::OutputExists(_))
+        ));
+        assert_eq!(fs::read(&b).unwrap(), b"old");
+        publish(&a, &b, true).unwrap();
+        assert_eq!(fs::read(&b).unwrap(), b"new");
+    }
+
+    #[test]
+    fn exclusive_create_refuses_existing_names() {
+        let d = tempfile::tempdir().unwrap();
+        let p = d.path().join("x");
+        create_exclusive(&p).unwrap();
+        assert!(create_exclusive(&p).is_err());
+    }
 }

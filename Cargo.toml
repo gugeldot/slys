@@ -1,5 +1,6 @@
 [workspace]
 resolver = "2"
+exclude = ["fuzz"]
 members = ["crates/slys-core", "crates/slys-cli", "crates/slys-bridge"]
 
 [workspace.package]
@@ -16,3 +17,8 @@ lto = true
 codegen-units = 1
 strip = true
 panic = "abort"
+
+# Dependencies (Argon2, AES, SHA-2...) are compiled with optimisations even in debug builds:
+# otherwise key derivation is ~30x slower and tests / `make dev` crawl.
+[profile.dev.package."*"]
+opt-level = 2

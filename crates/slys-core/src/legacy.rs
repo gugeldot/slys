@@ -5,7 +5,7 @@
 //! New data is never written in this format. Unlike 1.x, a failed decryption is now an error
 //! (1.x silently wrote the encrypted bytes into the output and then deleted the fragments).
 
-use std::fs::{self, File};
+use std::fs;
 use std::io::{BufWriter, Write};
 use std::path::Path;
 
@@ -100,16 +100,16 @@ pub(crate) fn recompose(
 ) -> Result<RecomposeReport> {
     let seed = open_seed(seed_text, password)?;
     let out_path = output_dir.join(crate::ops::output_file_name(&seed.name));
-    if out_path.exists() && !opts.overwrite {
+    if out_path.symlink_metadata().is_ok() && !opts.overwrite {
         return Err(Error::OutputExists(out_path.display().to_string()));
     }
     fs::create_dir_all(output_dir)?;
-    let tmp = out_path.with_extension("slys-part");
+    let tmp = output_dir.join(format!(".slys-{}.part", crate::ops::random_suffix()));
 
     let frag_password = Zeroizing::new(format!("{password}{SPICE}"));
     let total_frags = seed.files.len();
     let result = (|| -> Result<()> {
-        let mut out = BufWriter::new(File::create(&tmp)?);
+        let mut out = BufWriter::new(crate::ops::create_exclusive(&tmp)?);
         for (i, name) in seed.files.iter().enumerate() {
             let path = fragments_dir.join(name);
             let data = fs::read(&path).map_err(|e| {
@@ -140,13 +140,23 @@ pub(crate) fn recompose(
         let _ = fs::remove_file(&tmp);
         return Err(e);
     }
-    fs::rename(&tmp, &out_path)?;
+    if let Err(e) = crate::ops::publish(&tmp, &out_path, opts.overwrite) {
+        let _ = fs::remove_file(&tmp);
+        return Err(e);
+    }
 
-    let (deleted, warnings) = delete_fragment_files(
+    let (deleted, mut warnings) = delete_fragment_files(
         fragments_dir,
         seed.files.iter().map(String::as_str),
         opts.delete_fragments,
         progress,
+    );
+    // SLYS 1.x used unauthenticated encryption: a wrong or tampered file can not be detected.
+    warnings.insert(
+        0,
+        "This seed uses the old SLYS 1.x format, which cannot verify that the rebuilt file is \
+         intact. Check the result, then fragment it again to upgrade to the current format."
+            .to_string(),
     );
     Ok(RecomposeReport {
         output: out_path,

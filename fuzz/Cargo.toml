@@ -1,0 +1,36 @@
+[package]
+name = "slys-core-fuzz"
+version = "0.0.0"
+publish = false
+edition = "2021"
+
+[package.metadata]
+cargo-fuzz = true
+
+[dependencies]
+libfuzzer-sys = "0.4"
+slys-core = { path = "../crates/slys-core" }
+tempfile = "3"
+base64 = "0.22"
+crc32fast = "1"
+
+# Not part of the main workspace: it needs nightly Rust.
+[workspace]
+
+[[bin]]
+name = "seed_text"
+path = "fuzz_targets/seed_text.rs"
+test = false
+doc = false
+
+[[bin]]
+name = "seed_structured"
+path = "fuzz_targets/seed_structured.rs"
+test = false
+doc = false
+
+[[bin]]
+name = "fragment_bytes"
+path = "fuzz_targets/fragment_bytes.rs"
+test = false
+doc = false

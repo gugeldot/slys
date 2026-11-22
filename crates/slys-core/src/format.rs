@@ -310,6 +310,8 @@ pub(crate) fn open(text: &str, password: &str) -> Result<Opened> {
             },
         )
         .map_err(|_| Error::WrongPasswordOrTampered)?;
+    // The payload lists names and hashes of your files: do not leave it lying in memory.
+    let plain = zeroize::Zeroizing::new(plain);
     let payload = Payload::decode(&plain)?;
     validate_names(&payload)?;
     Ok(Opened { payload, master })

@@ -10,10 +10,10 @@ export SLYS_CONFIG_DIR="$work/config" SLYS_PASSWORD="demo-password" SLYS_FAST_KD
 head -c 1000000 /dev/urandom > "$work/sample.bin"
 echo "original:"; sha256sum "$work/sample.bin"
 
-seed=$(cargo run -q -p slys-cli -- frag "$work/sample.bin" -o "$work/frags" -n 8 --original keep)
+seed=$(cargo run -q -p slys-cli --features insecure-fast-kdf -- frag "$work/sample.bin" -o "$work/frags" -n 8 --original keep)
 echo "seed: ${seed:0:60}..."
 ls "$work/frags"
 
-cargo run -q -p slys-cli -- compose "$seed" -f "$work/frags" -o "$work/out" --delete-fragments keep
+cargo run -q -p slys-cli --features insecure-fast-kdf -- compose "$seed" -f "$work/frags" -o "$work/out" --delete-fragments keep
 echo "rebuilt:"; sha256sum "$work/out/sample.bin"
 echo "(files are in $work)"
