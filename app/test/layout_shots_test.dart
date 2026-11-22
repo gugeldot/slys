@@ -55,6 +55,9 @@ void main() {
         ChangeNotifierProvider(create: (_) => ThemeNotifier(), child: const MyWidget()),
       );
       await tester.pumpAndSettle(const Duration(seconds: 1));
+      // Let the logo image decode so the first screenshot has it too.
+      await tester.runAsync(() => Future<void>.delayed(const Duration(milliseconds: 500)));
+      await tester.pump();
       expect(tester.takeException(), isNull);
       await expectLater(find.byType(MaterialApp), matchesGoldenFile('shots/home_${e.key}.png'));
 
