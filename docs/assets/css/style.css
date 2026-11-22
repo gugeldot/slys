@@ -273,9 +273,9 @@ ul.plain { margin: 0 0 1em; padding-left: 1.2em; }
 ul.plain li { margin-bottom: .4em; }
 
 /* ---------- Roadmap ---------- */
-.timeline { list-style: none; margin: 0; padding: 0; display: grid; grid-template-columns: repeat(5, minmax(0, 1fr)); gap: 18px; position: relative; }
+.timeline { list-style: none; margin: 0; padding: 0; display: grid; grid-template-columns: repeat(6, minmax(0, 1fr)); gap: 14px; position: relative; }
 .timeline::before { content: ""; position: absolute; left: 0; right: 0; top: 17px; height: 2px; background: var(--border); }
-.timeline::after { content: ""; position: absolute; left: 0; top: 17px; height: 2px; width: 40%; background: linear-gradient(90deg, var(--purple), var(--purple-2)); box-shadow: 0 0 12px var(--purple); transform-origin: 0 50%; }
+.timeline::after { content: ""; position: absolute; left: 0; top: 17px; height: 2px; width: 66%; background: linear-gradient(90deg, var(--purple), var(--purple-2)); box-shadow: 0 0 12px var(--purple); transform-origin: 0 50%; }
 .js .timeline::after { transform: scaleX(0); transition: transform 1.4s var(--ease) .2s; }
 .js .timeline.in::after { transform: scaleX(1); }
 .timeline > li { position: relative; padding-top: 48px; }
@@ -310,7 +310,7 @@ ul.plain li { margin-bottom: .4em; }
 .js .card.reveal.in { transition: opacity .8s var(--ease) var(--d, 0s), transform .35s var(--ease), border-color .3s, box-shadow .35s; }
 
 /* ---------- Responsive ---------- */
-@media (max-width: 1000px) {
+@media (max-width: 1100px) {
     .timeline { grid-template-columns: repeat(2, minmax(0, 1fr)); row-gap: 28px; }
   .timeline::before, .timeline::after { display: none; }
 }
