@@ -35,6 +35,9 @@ modules:
       - install -Dm644 io.github.gugeldot.Slys.desktop /app/share/applications/io.github.gugeldot.Slys.desktop
       - install -Dm644 io.github.gugeldot.Slys.metainfo.xml /app/share/metainfo/io.github.gugeldot.Slys.metainfo.xml
       - install -Dm644 io.github.gugeldot.Slys.png /app/share/icons/hicolor/512x512/apps/io.github.gugeldot.Slys.png
+      - install -Dm644 io.github.gugeldot.Slys-128.png /app/share/icons/hicolor/128x128/apps/io.github.gugeldot.Slys.png
+      - install -Dm644 io.github.gugeldot.Slys-64.png /app/share/icons/hicolor/64x64/apps/io.github.gugeldot.Slys.png
+      - install -Dm644 io.github.gugeldot.Slys-48.png /app/share/icons/hicolor/48x48/apps/io.github.gugeldot.Slys.png
     sources:
       - type: archive
         path: slys-linux-x64.tar.gz
@@ -45,3 +48,9 @@ modules:
         path: io.github.gugeldot.Slys.metainfo.xml
       - type: file
         path: ../icons/io.github.gugeldot.Slys.png
+      - type: file
+        path: ../icons/io.github.gugeldot.Slys-128.png
+      - type: file
+        path: ../icons/io.github.gugeldot.Slys-64.png
+      - type: file
+        path: ../icons/io.github.gugeldot.Slys-48.png

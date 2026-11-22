@@ -47,6 +47,20 @@ static void my_application_activate(GApplication* application) {
     gtk_window_set_title(window, "SLYS");
   }
 
+  // The window's own icon (taskbars and docks that do not look the .desktop file up use it).
+  // Installed builds (Flatpak) have it in the icon theme; the zip bundle carries a copy.
+  if (gtk_icon_theme_has_icon(gtk_icon_theme_get_default(), "io.github.gugeldot.Slys")) {
+    gtk_window_set_icon_name(window, "io.github.gugeldot.Slys");
+  } else {
+    g_autofree gchar* exe = g_file_read_link("/proc/self/exe", nullptr);
+    if (exe != nullptr) {
+      g_autofree gchar* dir = g_path_get_dirname(exe);
+      g_autofree gchar* icon = g_build_filename(
+          dir, "data", "flutter_assets", "assets", "images", "app_icon.png", nullptr);
+      gtk_window_set_icon_from_file(window, icon, nullptr);
+    }
+  }
+
   gtk_window_set_default_size(window, 1100, 760);
   // The UI adapts to the window width; below this the layout stops being useful.
   GdkGeometry min_size = {};
