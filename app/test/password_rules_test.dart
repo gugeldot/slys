@@ -5,9 +5,9 @@ void main() {
   bool rule(int i, String p, [String r = '']) => passwordRules[i].met(p, r);
 
   test('length counts characters, not bytes', () {
-    expect(rule(0, 'a' * 11), isFalse);
-    expect(rule(0, 'a' * 12), isTrue);
-    expect(rule(0, 'ñ' * 12), isTrue);
+    expect(rule(0, 'a' * 9), isFalse);
+    expect(rule(0, 'a' * 10), isTrue);
+    expect(rule(0, 'ñ' * 10), isTrue);
   });
 
   test('character classes, including non-English letters', () {

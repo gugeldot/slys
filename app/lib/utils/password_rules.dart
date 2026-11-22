@@ -10,7 +10,7 @@ class PasswordRule {
   const PasswordRule(this.label, this.met);
 }
 
-const int kMinPasswordLength = 12;
+const int kMinPasswordLength = 10;
 
 final _upper = RegExp(r'\p{Lu}', unicode: true);
 final _lower = RegExp(r'\p{Ll}', unicode: true);
