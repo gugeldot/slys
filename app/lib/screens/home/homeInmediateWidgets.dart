@@ -1,15 +1,12 @@
 
 import 'package:flutter/material.dart';
-import 'package:bitsdojo_window/bitsdojo_window.dart';
-import 'dart:io';
-import 'package:intl/intl.dart';
 
-import '../../custom/custom_widgets.dart';
 import '../about/aboutInmediateWidgets.dart';
 import '../../utils/app_styles.dart';
 import '../main/mainInmediateWidgets.dart';
 import '../tutorial/tutorial.dart';
 import '../settings/settings.dart';
+import '../../src/rust/api/version.dart';
 
 Widget getTabContent({
   required int selectedTabIndex,
@@ -71,149 +68,83 @@ Widget getTabContent({
 
 
       case 1:
-        return const SettingsScreen(); 
+        return _page(const SettingsScreen());
       case 2:
-        return SingleChildScrollView(
+        return _page(SingleChildScrollView(
+          padding: const EdgeInsets.all(16),
+          child: Column(children: [
+            Center(
+              child: Image.asset(
+                AppTheme.isDark ? 'assets/images/logQT.png' : 'assets/images/logQTINV.png',
+                height: 120,
+                fit: BoxFit.contain,
+              ),
+            ),
+            tutorialScreen(),
+          ]),
+        ));
+      case 3:
+        return _page(SingleChildScrollView(
           padding: const EdgeInsets.all(16),
           child: Column(
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
-              const SizedBox(height: 24),
               imageBlock(),
-
               const SizedBox(height: 24),
               whyTextBlock(),
-              
               const SizedBox(height: 26),
               capabilitiesTextBlock(),
-              
               const SizedBox(height: 24),
               ackTextBlock(),
-
               const SizedBox(height: 24),
               legalNoticeBlock(),
-              
               const SizedBox(height: 24),
               paypalButton(),
             ],
           ),
-        );
-      case 3:
-        return SingleChildScrollView(
-          padding: const EdgeInsets.all(16),
-          child: Column(children: [
-            Center( 
-                child: Image.asset(
-                  AppTheme.isDark 
-                        ? 'assets/images/logQT.png'
-                        : 'assets/images/logQTINV.png',
-                  height: 120,
-                  fit: BoxFit.cover,
-                ),),
-
-            tutorialScreen(),
-            ])
-        );
+        ));
       default:
         return Container();
     }
   }
 
-
-
-Widget appBarCustom() {
-  return WindowTitleBarBox(
-            child: SizedBox(
-              height: 40,
-              child: Row(
-                children: [
-                  Expanded(
-                    child: MoveWindow(
-                      child: Row(
-                        children: [
-                          const SizedBox(width: 16),
-                          Text(
-                            "Slys",
-                            style: TextStyle(
-                              color: AppTheme.white,
-                              fontWeight: FontWeight.bold,
-                              fontSize: 16,
-                            ),
-                          ),
-                        ],
-                      ),
-                    ),
-                  ),
-                  Row(
-                    children: [
-                      windowActionButton(() {
-                        appWindow.minimize();
-                      }, Icons.minimize),
-                      windowActionButton(() {
-                        appWindow.maximizeOrRestore();
-                      }, Icons.check_box_outline_blank_sharp),
-                      windowActionButton(() {
-                        appWindow.close();
-                      }, Icons.close),
-                    ],
-                  ),
-                ],
-              ),
-            ),
-          );
+/// Reading pages (settings, tutorial, about) stay centred and not wider than 860 px.
+Widget _page(Widget child) {
+  return Align(
+    alignment: Alignment.topCenter,
+    child: ConstrainedBox(constraints: const BoxConstraints(maxWidth: 860), child: child),
+  );
 }
 
-Widget bannerPostAppbar(double heightAppBar){
+/// Slim header: logo, name and version. It shrinks gracefully; there is no fake window bar,
+/// the operating system draws the real one.
+Widget appHeader() {
+  String version = '';
+  try {
+    version = 'v${versionInfo().version}';
+  } catch (_) {}
   return Container(
-            height: heightAppBar,
-            width: double.infinity,
-            decoration: BoxDecoration(
-              color: AppTheme.window_background,
-              border: Border.all(color: AppTheme.black, width: 1),
-            ),
-            padding: const EdgeInsets.symmetric(horizontal: 16),
-            child: Row(
-              mainAxisAlignment: MainAxisAlignment.spaceBetween,
-              children: [
-                // IZQUIERDA
-                Row(
-                  children: [
-                    Image.asset(
-                      AppTheme.isDark 
-                        ? 'assets/images/logo_inv.png' 
-                        : 'assets/images/logo.png',
-                      height: 50,
-                      width: 50,
-                    ),
-
-                    const SizedBox(width: 8),
-                    Text(
-                      "Slys Desktop",
-                      style: TextStyle(fontSize: 18, color: AppTheme.white),
-                    ),
-                  ],
-                ),
-
-                // DERECHA
-                Column(
-                  mainAxisAlignment: MainAxisAlignment.center,
-                  crossAxisAlignment: CrossAxisAlignment.end,
-                  children: [
-                    Text(
-                      DateFormat('dd/MM/yyyy – HH:mm').format(DateTime.now()),
-                      style:  TextStyle(color: AppTheme.white),
-                    ),
-                    Text(
-                      'Host: ${Platform.localHostname}',
-                      style:  TextStyle(color: AppTheme.white),
-                    ),
-                    Text(
-                      'OS: ${Platform.operatingSystem}',
-                      style: TextStyle(color: AppTheme.white),
-                    ),
-                  ],
-                ),
-              ],
-            ),
-          );
+    width: double.infinity,
+    padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 10),
+    color: AppTheme.window_background,
+    child: Row(
+      children: [
+        Image.asset(
+          AppTheme.isDark ? 'assets/images/logo_inv.png' : 'assets/images/logo.png',
+          height: 36,
+          width: 36,
+        ),
+        const SizedBox(width: 10),
+        Expanded(
+          child: Text(
+            'Slys Desktop',
+            maxLines: 1,
+            overflow: TextOverflow.ellipsis,
+            style: TextStyle(fontSize: 18, fontWeight: FontWeight.w600, color: AppTheme.white),
+          ),
+        ),
+        Text(version, style: minitTextStyle()),
+      ],
+    ),
+  );
 }

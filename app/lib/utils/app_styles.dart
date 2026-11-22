@@ -24,6 +24,10 @@ class AppTheme {
 
   static Color get accent => _accentColor;
 
+  /// Text colour that stays readable on top of the accent colour (yellow needs dark text).
+  static Color get onAccent =>
+      ThemeData.estimateBrightnessForColor(_accentColor) == Brightness.dark ? Colors.white : Colors.black;
+
   static void setAccentColor(String colorName) {
     switch (colorName) {
       case 'Red':

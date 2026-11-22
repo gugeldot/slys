@@ -10,6 +10,9 @@ class ThemeNotifier extends ChangeNotifier {
     AppTheme.isDark = isDarkMode;
     notifyListeners();
   }
+
+  /// Call after changing AppTheme (e.g. the accent colour) so the UI repaints.
+  void refresh() => notifyListeners();
   
 }
 

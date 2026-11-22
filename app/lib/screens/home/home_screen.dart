@@ -1,9 +1,10 @@
 import 'package:flutter/material.dart';
+import 'package:provider/provider.dart';
+import '../../custom/theme.dart';
 import 'homeInmediateWidgets.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 
 import '../../utils/app_styles.dart';
-import '../../custom/custom_widgets.dart';
 import '../../utils/utils.dart';
 import '../settings/settings.dart';
 
@@ -15,8 +16,6 @@ class HomeScreen extends StatefulWidget {
 }
 
 class _HomeScreenState extends State<HomeScreen> {
-  double heightAppBar = 100;
-  double heightTabBar = 25;
   int selectedTabIndex = 0;
   int fragmentSize = 5; 
 
@@ -86,91 +85,84 @@ void initState() {
 
 
 
-  // Function for setting tabs
-Widget _tabButton(String text, int index) {
-  final isSelected = selectedTabIndex == index;
+  static const _tabs = [
+    (label: 'Home', icon: Icons.home_outlined),
+    (label: 'Settings', icon: Icons.settings_outlined),
+    (label: 'Tutorial', icon: Icons.menu_book_outlined),
+    (label: 'About', icon: Icons.info_outline),
+  ];
 
-  return GestureDetector(
-    onTap: () async {
-      setState(() {
-        selectedTabIndex = index;
-      });
+  Future<void> _selectTab(int index) async {
+    setState(() => selectedTabIndex = index);
+    // Back on Home: pick up defaults changed in Settings.
+    if (index == 0) await refreshPrefsFromStorage();
+  }
 
-      // Si volvió a la pestaña "Home", actualizá el path desde prefs
-      if (index == 0) {
-        await refreshPrefsFromStorage();
-      }
-    },
-    child: Container(
-      width: 100,
-      height: 50,
-      decoration: BoxDecoration(
-        color: isSelected ? AppTheme.lessWhite : AppTheme.secondBackground,
-        borderRadius: const BorderRadius.only(
-          topLeft: Radius.circular(12),
-          topRight: Radius.circular(12),
+  Widget _tabBar() {
+    return LayoutBuilder(builder: (context, c) {
+      final showIcons = c.maxWidth >= 520;
+      return Container(
+        decoration: BoxDecoration(
+          border: Border(bottom: BorderSide(color: AppTheme.lessGrey)),
         ),
-        border: Border.all(color: AppTheme.black),
-      ),
-      alignment: Alignment.center,
-      child: Text(
-        text,
-        style: TextStyle(
-          color: isSelected ?  AppTheme.black :  AppTheme.white,
-          fontWeight: FontWeight.bold,
+        child: Row(
+          children: [
+            for (var i = 0; i < _tabs.length; i++)
+              Expanded(
+                child: InkWell(
+                  onTap: () => _selectTab(i),
+                  child: Container(
+                    padding: const EdgeInsets.symmetric(vertical: 12),
+                    decoration: BoxDecoration(
+                      border: Border(
+                        bottom: BorderSide(
+                          color: selectedTabIndex == i ? AppTheme.accent : Colors.transparent,
+                          width: 3,
+                        ),
+                      ),
+                    ),
+                    child: Row(
+                      mainAxisAlignment: MainAxisAlignment.center,
+                      children: [
+                        if (showIcons) ...[
+                          Icon(_tabs[i].icon,
+                              size: 18,
+                              color: selectedTabIndex == i ? AppTheme.white : AppTheme.shadow),
+                          const SizedBox(width: 6),
+                        ],
+                        Flexible(
+                          child: Text(
+                            _tabs[i].label,
+                            overflow: TextOverflow.ellipsis,
+                            style: TextStyle(
+                              fontWeight: selectedTabIndex == i ? FontWeight.bold : FontWeight.normal,
+                              color: selectedTabIndex == i ? AppTheme.white : AppTheme.shadow,
+                            ),
+                          ),
+                        ),
+                      ],
+                    ),
+                  ),
+                ),
+              ),
+          ],
         ),
-      ),
-    ),
-  );
-}
-
+      );
+    });
+  }
 
   @override
   Widget build(BuildContext context) {
+    // Repaint when the theme or accent colour changes (they are applied live).
+    context.watch<ThemeNotifier>();
     return Scaffold(
       backgroundColor: AppTheme.background,
-      body: Column(
-        children: [
-          // Appbar
-          appBarCustom(),
-          // visual con el resto del alto
-          bannerPostAppbar(heightAppBar),
-          // TabBar
-          WindowContainer(
-            height: heightTabBar,
-            borderColor: AppTheme.transpartent,
-            child: Row(
-              mainAxisAlignment: MainAxisAlignment.start,
-              crossAxisAlignment: CrossAxisAlignment.stretch,
-              children: [
-                MouseRegion(
-                cursor: SystemMouseCursors.click,
-                child: _tabButton("Home", 0),),
-                SizedBox(width: 10),
-                
-               
-                MouseRegion(
-                cursor: SystemMouseCursors.click,
-                child: _tabButton("Settings", 1)),
-                SizedBox(width: 10),
-                
-                MouseRegion(
-                cursor: SystemMouseCursors.click,
-                child: _tabButton("Tutorial", 3)),
-                SizedBox(width: 10),
-                
-                MouseRegion(
-                cursor: SystemMouseCursors.click,
-                child: _tabButton("About", 2)),
-                
-
-                
-              ],
-            ),
-          ),
-          Expanded(
-            child: WindowContainer(
-              // Selector de partes del main container
+      body: SafeArea(
+        child: Column(
+          children: [
+            appHeader(),
+            _tabBar(),
+            Expanded(
               child: getTabContent(
                 selectedTabIndex: selectedTabIndex,
                 selectedFilePath: selectedFilePath,
@@ -252,14 +244,9 @@ Widget _tabButton(String text, int index) {
                 },
 
               ),
-
-
             ),
-
-            
-
-          ),
-        ],
+          ],
+        ),
       ),
     );
   }

@@ -1,17 +1,17 @@
 import 'package:flutter/material.dart';
-import '../../utils/app_styles.dart';
-import '../../custom/custom_widgets.dart';
-import '../about/about_fn.dart';
-import 'main_fn.dart';
-import '../../services/file_dialogs.dart';
 import 'package:flutter/services.dart';
-import '../settings/settings.dart';
 import 'package:shared_preferences/shared_preferences.dart';
+
+import '../../custom/custom_widgets.dart';
+import '../../services/file_dialogs.dart';
+import '../../utils/app_styles.dart';
+import '../settings/settings.dart';
+import 'main_fn.dart';
 
 final ScrollController scrollController = ScrollController();
 final GlobalKey<SeedsTableState> seedsTableKey = GlobalKey<SeedsTableState>();
 
-
+/// Home screen. Two columns (Fragment | Seeds) when the window is wide, stacked when it is not.
 Widget mainScreen({
   required String? selectedFilePath,
   required void Function(String path) onFileSelected,
@@ -32,304 +32,202 @@ Widget mainScreen({
   required String? repeatPassword,
   required TextEditingController repeatPasswordController,
   required void Function(String value) onRepeatPasswordChanged,
-
-
-
-  // 👇 Añade esto también:
   required String? recomposePassword,
   required TextEditingController recomposePasswordController,
   required void Function(String value) onRecomposePasswordChanged,
 }) {
- return Padding(
-    padding: const EdgeInsets.only(left: 12, top: 6),
-    child: Scrollbar( 
-      controller: scrollController, // 👈 agregado
-      thumbVisibility: true,
-      child: 
-      ListView( 
-        controller: scrollController,
+  final fragmentCard = AppCard(
+    title: 'Fragment',
+    child: Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
       children: [
-      Column(
+        Text('Split a file into encrypted pieces.', style: minitTextStyle()),
+        const SizedBox(height: 16),
+        TargetFileSelector(currentFilePath: selectedFilePath, onFileSelected: onFileSelected),
+        const SizedBox(height: 14),
+        OutputPathSelector(currentPath: selectedOutputPath, onPathSelected: onOutputPathSelected),
+        const SizedBox(height: 16),
+        PasswordAndEncryptionOptions(
+          encryptionLevel: encryptionLevel,
+          onEncryptionChanged: onEncryptionLevelChanged,
+          password: password,
+          onPasswordChangedText: onPasswordChangedText,
+          passwordController: passwordController,
+          repeatPassword: repeatPassword,
+          repeatPasswordController: repeatPasswordController,
+          onRepeatPasswordChanged: onRepeatPasswordChanged,
+        ),
+        const SizedBox(height: 12),
+        SliderWidget(currentValue: fragmentSize, onChanged: onFragmentSizeChanged),
+        const SizedBox(height: 8),
+        Row(
+          crossAxisAlignment: CrossAxisAlignment.start,
           children: [
-            const SizedBox(height: 20),
-            WindowContainer(
-              borderColor: AppTheme.transpartent, 
-              child: Column(
-                crossAxisAlignment: CrossAxisAlignment.start,
-                children: [
-                  SectionHeader("Fragment"),
-                  Text("Select diferent settings of target fragmentation:", style: minitTextStyle(),),
-                  const SizedBox(height: 20),
-                  TargetFileSelector(
-                    currentFilePath: selectedFilePath,
-                    onFileSelected: onFileSelected,
-                  ),
-                  const SizedBox(height: 15),
-                  OutputPathSelector(
-                    currentPath: selectedOutputPath,
-                    onPathSelected: onOutputPathSelected,
-                  ),
-                  const SizedBox(height: 10),
-                  PasswordAndEncryptionOptions(
-                    encryptionLevel: encryptionLevel,
-                    onEncryptionChanged: onEncryptionLevelChanged,
-                    password: password,
-                    onPasswordChangedText: onPasswordChangedText,
-                    passwordController: passwordController,
-
-                    // 👇 Añadir estos tres para corregir el error:
-                    repeatPassword: repeatPassword,
-                    repeatPasswordController: repeatPasswordController,
-                    onRepeatPasswordChanged: onRepeatPasswordChanged,
-                  ),
-
-                  const SizedBox(width: 60),
-                  Row(
-                    children: [
-                      Text(
-                        "⚠️ Slys doesn't store this, remember it! ⚠️",
-                        style: TextStyle(color: AppTheme.white),
-                        ),
-                      Spacer(),
-                     SliderWidget(
-                        currentValue: fragmentSize,
-                        onChanged: onFragmentSizeChanged,
-                      ),
-                      const SizedBox(width: 20),
-                    ],
-                  ),
-                  
-                  
-                  
-
-                  FragButton(
-                    selectedFilePath: selectedFilePath,
-                    selectedOutputPath: selectedOutputPath,
-                    encryptionLevel: encryptionLevel,
-                    password: password,
-                    repeatPassword: repeatPassword, // 👈 ¡ESTO!
-                    fragmentSize: fragmentSize,
-                    onSeedAdded: () => seedsTableKey.currentState?.refreshTable(),
-                    onClearFields: () async {
-                      final prefs = await SharedPreferences.getInstance();
-
-                      if (!prefs.containsKey(kSelectedOutputPathKey)) {
-                        onOutputPathSelected('');
-                      }
-                      if (!prefs.containsKey(kFragmentSizeKey)) {
-                        onFragmentSizeChanged(5);
-                      }
-                      if (!prefs.containsKey(kEncryptionLevelKey)) {
-                        onEncryptionLevelChanged('Total');
-                      }
-
-                      onFileSelected('');
-                      onPasswordChangedText('');
-                      passwordController.clear();
-                      repeatPasswordController.clear();
-                    },
-                  ),
-                 
-                ],
-              )
+            const Icon(Icons.warning_amber_rounded, color: Colors.amber, size: 20),
+            const SizedBox(width: 8),
+            Expanded(
+              child: Text(
+                "Slys doesn't store the password. If you lose it, the file cannot be recovered.",
+                style: minitTextStyle(),
+              ),
             ),
-            const SizedBox(height: 20),
-
-            WindowContainer(
-              borderColor: AppTheme.transpartent, 
-              child: Column(
-                crossAxisAlignment: CrossAxisAlignment.start,
-                children: [
-                  Row(
-                      mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                      children: [
-                        Text(
-                          "Seeds",
-                          style: TextStyle(
-                            fontSize: 19,
-                            fontWeight: FontWeight.bold,
-                            color:  AppTheme.white,
-                          ),
-                        ),
-                       
-                        SizedBox(width: 10),
-                        
-                        
-
-                        Row(children: [
-                          // CopyButton
-                            if (selectedSeed != null)
-                          Container(
-                            decoration: BoxDecoration(
-                              color: AppTheme.secondBackground,
-                              border: Border.all(color:  AppTheme.white),
-                              borderRadius: BorderRadius.circular(8),
-                            ),
-                            child: IconButton(
-                            icon: Icon(Icons.copy, color:  AppTheme.white),
-                            tooltip: 'Copy seed to clipboard',
-                            onPressed: () async {
-                              // ignore: unnecessary_non_null_assertion
-                              await Clipboard.setData(ClipboardData(text: selectedSeed!));
-                              if (ScaffoldMessenger.maybeOf(seedsTableKey.currentContext!) != null) {
-                                ScaffoldMessenger.of(seedsTableKey.currentContext!).showSnackBar(
-                                  const SnackBar(
-                                    content: Text('Seed copied to clipboard'),
-                                    duration: Duration(seconds: 2),
-                                  ),
-                                );
-                              }
-                            },
-                          ),
-
-                        ),
-                         SizedBox(width: 10),
-                          Container(
-                            decoration: BoxDecoration(
-                              color: AppTheme.secondBackground, // Fondo del botón
-                              border: Border.all(color:  AppTheme.white), // Borde blanco
-                              borderRadius: BorderRadius.circular(8),  // Esquinas redondeadas
-                            ),
-                            
-                            child: IconButton(
-                              icon: Icon(Icons.refresh, color:  AppTheme.white),
-                              tooltip: 'Refresh Seeds Table',
-                              onPressed: () {
-                                seedsTableKey.currentState?.refreshTable();
-                              },
-                            ),
-                          ),
-                          SizedBox(width: 20),
-                        ],),
-                        
-                        
-                      ],
-                    ),
-                      const SizedBox(height: 4),
-                         Divider(
-                          color: AppTheme.white,
-                          thickness: 1,
-                        ),
-                        const SizedBox(height: 12),
-                  Center(child: 
-                    Padding(
-                      padding: const EdgeInsets.only(right: 12.0),
-                      child: 
-                        SeedsTable(
-                        key: seedsTableKey,
-                        selectedSeed: selectedSeed,
-                        selectedIndex: selectedSeedIndex,
-                        onSeedSelected: onSeedSelected,
-                      )
-                    ),
-                    
-                  ),
-                  const SizedBox(height: 10,),
-                  if (selectedSeed != null)
-                  Padding(
-                    padding: const EdgeInsets.only(left: 35.0),
-                    child: 
-                    Padding(padding: const EdgeInsets.only(right: 35.0), 
-                    child: 
-                    Row(
-                      children: [
-                        ElevatedButton(
-                          // ignore: unnecessary_null_comparison
-                          onPressed: selectedSeed != null
-                              ? () async {
-                                  String? picked = await pickDirectoryPath();
-                                  if (picked != null) {
-                                    onRecomposeOutputPathSelected(picked);
-                                  }
-                                }
-                              : null,
-                          style: ElevatedButton.styleFrom(
-                            backgroundColor: AppTheme.secondBackground,
-                            foregroundColor:  AppTheme.white,
-                            side:  BorderSide(color: AppTheme.white),
-                            shape: RoundedRectangleBorder(
-                              borderRadius: BorderRadius.circular(8),
-                            ),
-                            padding: const EdgeInsets.symmetric(horizontal: 24, vertical: 12),
-                          ),
-                          child: const Text("Browse"),
-                        ),
-                        SizedBox(width: 10,),
-                        Text(
-                          "Where are the slices?:",
-                          style: TextStyle(fontWeight: FontWeight.bold, color:  AppTheme.white),
-                        ),
-                        const SizedBox(width: 10),
-                        Text(
-                            recomposeOutputPath ?? "No path selected",
-                            overflow: TextOverflow.ellipsis,
-                            maxLines: 1,
-                            style: TextStyle(color:  AppTheme.white),
-                          ),
-                       
-                      ],
-                    ),),
-                  ),
-                  SizedBox(height: 15,),
-                  Row(
-                      children: [
-                        SizedBox(
-                          width: 180,
-                          child: TextField(
-                            controller: recomposePasswordController,
-                            obscureText: true,
-                            onChanged: onRecomposePasswordChanged,
-                            enabled: selectedSeed != null, // 👈 Aquí lo inhabilitas si no hay seed
-                            style:  TextStyle(color:  AppTheme.white),
-                            decoration:  InputDecoration(
-                              hintText: 'Password',
-                              hintStyle: TextStyle(color: AppTheme.shadow),
-                              isDense: true,
-                              border: OutlineInputBorder(),
-                            ),
-                          ),
-                        ),
-
-                        const SizedBox(width: 10),
-                        RecomposeButton(
-                          seed: selectedSeed,
-                          password: recomposePassword,
-                          onRefreshRequested: () => seedsTableKey.currentState?.refreshTable(),
-                          onClearFields: () {
-                            recomposePasswordController.clear();
-                            onRecomposePasswordChanged('');
-                            onSeedSelected('', -1);
-                          },
-                          inputPath: recomposeOutputPath
-                        ),
-
-                        const Spacer(),
-                        DeleteSeedButton(
-                          seed: selectedSeed,
-                          onRefreshRequested: () => seedsTableKey.currentState?.refreshTable(),
-                          onClearSelection: () => onSeedSelected('', -1), // 👈 deselect
-                        ),
-
-
-                        const SizedBox(width: 10),
-                        AddSeedButton(
-                          onRefreshRequested: () => seedsTableKey.currentState?.refreshTable(),
-                        ),
-
-                        const SizedBox(width: 12),
-                      ],
-                    ),
-
-
-
-                ],
-              )
-            ),
-
-            
-            const SizedBox(height: 20),
           ],
-        )
-    ]
-  )));
+        ),
+        const SizedBox(height: 16),
+        FragButton(
+          selectedFilePath: selectedFilePath,
+          selectedOutputPath: selectedOutputPath,
+          encryptionLevel: encryptionLevel,
+          password: password,
+          repeatPassword: repeatPassword,
+          fragmentSize: fragmentSize,
+          onSeedAdded: () => seedsTableKey.currentState?.refreshTable(),
+          onClearFields: () async {
+            final prefs = await SharedPreferences.getInstance();
+
+            if (!prefs.containsKey(kSelectedOutputPathKey)) {
+              onOutputPathSelected('');
+            }
+            if (!prefs.containsKey(kFragmentSizeKey)) {
+              onFragmentSizeChanged(5);
+            }
+            if (!prefs.containsKey(kEncryptionLevelKey)) {
+              onEncryptionLevelChanged('Total');
+            }
+
+            onFileSelected('');
+            onPasswordChangedText('');
+            onRepeatPasswordChanged('');
+            passwordController.clear();
+            repeatPasswordController.clear();
+          },
+        ),
+      ],
+    ),
+  );
+
+  final seedsCard = AppCard(
+    title: 'Seeds',
+    trailing: Row(
+      mainAxisSize: MainAxisSize.min,
+      children: [
+        if (selectedSeed != null)
+          IconButton.outlined(
+            icon: Icon(Icons.copy, color: AppTheme.white, size: 20),
+            tooltip: 'Copy seed to clipboard',
+            onPressed: () async {
+              await Clipboard.setData(ClipboardData(text: selectedSeed));
+              final ctx = seedsTableKey.currentContext;
+              if (ctx != null && ctx.mounted) {
+                ScaffoldMessenger.of(ctx).showSnackBar(
+                  const SnackBar(
+                    content: Text('Seed copied to clipboard'),
+                    duration: Duration(seconds: 2),
+                  ),
+                );
+              }
+            },
+          ),
+        IconButton.outlined(
+          icon: Icon(Icons.refresh, color: AppTheme.white, size: 20),
+          tooltip: 'Refresh seeds',
+          onPressed: () => seedsTableKey.currentState?.refreshTable(),
+        ),
+      ],
+    ),
+    child: Column(
+      crossAxisAlignment: CrossAxisAlignment.stretch,
+      children: [
+        SeedsTable(
+          key: seedsTableKey,
+          selectedSeed: selectedSeed,
+          selectedIndex: selectedSeedIndex,
+          onSeedSelected: onSeedSelected,
+        ),
+        const SizedBox(height: 16),
+        if (selectedSeed != null) ...[
+          Divider(color: AppTheme.lessGrey),
+          const SizedBox(height: 8),
+          PathRow(
+            label: 'Where are the pieces?',
+            value: recomposeOutputPath,
+            placeholder: 'No folder selected',
+            onBrowse: () async {
+              final picked = await pickDirectoryPath();
+              if (picked != null) onRecomposeOutputPathSelected(picked);
+            },
+          ),
+          const SizedBox(height: 14),
+          LayoutBuilder(builder: (context, c) {
+            final field = PasswordField(
+              controller: recomposePasswordController,
+              label: 'Password',
+              onChanged: onRecomposePasswordChanged,
+            );
+            final button = RecomposeButton(
+              seed: selectedSeed,
+              password: recomposePassword,
+              onRefreshRequested: () => seedsTableKey.currentState?.refreshTable(),
+              onClearFields: () {
+                recomposePasswordController.clear();
+                onRecomposePasswordChanged('');
+                onSeedSelected('', -1);
+              },
+              inputPath: recomposeOutputPath,
+            );
+            if (c.maxWidth >= 440) {
+              return Row(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [Expanded(child: field), const SizedBox(width: 12), button],
+              );
+            }
+            return Column(
+              crossAxisAlignment: CrossAxisAlignment.stretch,
+              children: [field, const SizedBox(height: 12), button],
+            );
+          }),
+          const SizedBox(height: 16),
+        ],
+        Wrap(
+          alignment: WrapAlignment.end,
+          spacing: 10,
+          runSpacing: 10,
+          children: [
+            DeleteSeedButton(
+              seed: selectedSeed,
+              onRefreshRequested: () => seedsTableKey.currentState?.refreshTable(),
+              onClearSelection: () => onSeedSelected('', -1),
+            ),
+            AddSeedButton(
+              onRefreshRequested: () => seedsTableKey.currentState?.refreshTable(),
+            ),
+          ],
+        ),
+      ],
+    ),
+  );
+
+  return Scrollbar(
+    controller: scrollController,
+    thumbVisibility: true,
+    child: SingleChildScrollView(
+      controller: scrollController,
+      padding: const EdgeInsets.all(16),
+      child: LayoutBuilder(builder: (context, c) {
+        if (c.maxWidth >= kWideLayout) {
+          return Row(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              Expanded(child: fragmentCard),
+              const SizedBox(width: 16),
+              Expanded(child: seedsCard),
+            ],
+          );
+        }
+        return Column(
+          children: [fragmentCard, const SizedBox(height: 16), seedsCard],
+        );
+      }),
+    ),
+  );
 }

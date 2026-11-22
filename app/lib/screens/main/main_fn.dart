@@ -1,6 +1,7 @@
 
 import 'package:flutter/material.dart';
 import '../../services/file_dialogs.dart';
+import '../../custom/custom_widgets.dart';
 import '../../utils/app_styles.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 import '../../services/operation_runner.dart';
@@ -26,133 +27,47 @@ EncryptionMode encryptionModeFromKey(String key) {
   }
 }
 
-class TargetFileSelector extends StatefulWidget {
+class TargetFileSelector extends StatelessWidget {
   final void Function(String path) onFileSelected;
-  final String? currentFilePath; // <-- Para mostrar el archivo actual
+  final String? currentFilePath;
 
-  const TargetFileSelector({
-    super.key,
-    required this.onFileSelected,
-    this.currentFilePath,
-  });
-
-  @override
-  State<TargetFileSelector> createState() => _TargetFileSelectorState();
-}
-
-class _TargetFileSelectorState extends State<TargetFileSelector> {
-  void _pickFile() async {
-    final path = await pickFilePath();
-
-    if (path != null) {
-      widget.onFileSelected(path);
-    }
-  }
+  const TargetFileSelector({super.key, required this.onFileSelected, this.currentFilePath});
 
   @override
   Widget build(BuildContext context) {
-    return Row(
-      children: [
-        Text(
-          "+ Target file:   ",
-          style: TextStyle(fontWeight: FontWeight.bold, color: AppTheme.white),
-        ),
-        const SizedBox(width: 10),
-
-        Expanded(
-          child: Text(
-            widget.currentFilePath ?? "No file selected",
-            overflow: TextOverflow.ellipsis,
-            maxLines: 1,
-            style: TextStyle(color: AppTheme.white),
-          ),
-        ),
-
-        ElevatedButton(
-          style: ElevatedButton.styleFrom(
-            backgroundColor: AppTheme.secondBackground,         // Fondo del botón
-            foregroundColor: AppTheme.white,              // Color del texto
-            side: BorderSide(color: AppTheme.white),// Borde del botón
-            shape: RoundedRectangleBorder(
-              borderRadius: BorderRadius.circular(8),   // Esquinas redondeadas (opcional)
-            ),
-            padding: const EdgeInsets.symmetric(horizontal: 24, vertical: 12), // Padding interno
-          ),
-          onPressed: _pickFile,
-          child: const Text("Browse"),
-        ),
-        const SizedBox(width: 10),
-
-        
-      ],
+    return PathRow(
+      label: 'Target file',
+      value: currentFilePath,
+      placeholder: 'No file selected',
+      onBrowse: () async {
+        final path = await pickFilePath();
+        if (path != null) onFileSelected(path);
+      },
     );
   }
 }
 
-
-
-class OutputPathSelector extends StatefulWidget {
+class OutputPathSelector extends StatelessWidget {
   final void Function(String path) onPathSelected;
   final String? currentPath;
 
-  const OutputPathSelector({
-    super.key,
-    required this.onPathSelected,
-    this.currentPath,
-  });
-
-  @override
-  State<OutputPathSelector> createState() => _OutputPathSelectorState();
-}
-
-class _OutputPathSelectorState extends State<OutputPathSelector> {
-  void _pickDirectory() async {
-    final result = await pickDirectoryPath();
-
-    if (result != null) {
-      widget.onPathSelected(result);
-    }
-  }
+  const OutputPathSelector({super.key, required this.onPathSelected, this.currentPath});
 
   @override
   Widget build(BuildContext context) {
-    return Row(
-      children: [
-         Text(
-          "+ Output path:",
-          style: TextStyle(fontWeight: FontWeight.bold, color: AppTheme.white),
-        ),
-        const SizedBox(width: 10),
-        
-        Expanded(
-          child: Text(
-            widget.currentPath ?? "No path selected",
-            overflow: TextOverflow.ellipsis,
-            maxLines: 1,
-            style:  TextStyle(color: AppTheme.white),
-          ),
-        ),
-        const SizedBox(width: 10),
-        ElevatedButton(
-          style: ElevatedButton.styleFrom(
-            backgroundColor: AppTheme.secondBackground,         // Fondo del botón
-            foregroundColor: AppTheme.white,              // Color del texto
-            side:  BorderSide(color: AppTheme.white),// Borde del botón
-            shape: RoundedRectangleBorder(
-              borderRadius: BorderRadius.circular(8),   // Esquinas redondeadas (opcional)
-            ),
-            padding: const EdgeInsets.symmetric(horizontal: 24, vertical: 12), // Padding interno
-          ),
-          onPressed: _pickDirectory,
-          child: const Text("Browse"),
-        ),
-        const SizedBox(width: 10),
-      ],
+    return PathRow(
+      label: 'Output folder (where the pieces go)',
+      value: currentPath,
+      placeholder: 'No folder selected',
+      onBrowse: () async {
+        final result = await pickDirectoryPath();
+        if (result != null) onPathSelected(result);
+      },
     );
   }
 }
 
-class PasswordAndEncryptionOptions extends StatefulWidget {
+class PasswordAndEncryptionOptions extends StatelessWidget {
   final String encryptionLevel;
   final void Function(String?) onEncryptionChanged;
 
@@ -176,129 +91,61 @@ class PasswordAndEncryptionOptions extends StatefulWidget {
     required this.repeatPasswordController,
   });
 
-  @override
-  State<PasswordAndEncryptionOptions> createState() =>
-      _PasswordAndEncryptionOptionsState();
-}
-
-class _PasswordAndEncryptionOptionsState
-    extends State<PasswordAndEncryptionOptions> {
-  bool _obscurePassword = true;
-  bool _obscureRepeatPassword = true;
-
-  bool get _shouldShowError {
-    return (widget.password?.isNotEmpty ?? false) &&
-           (widget.repeatPassword?.isNotEmpty ?? false) &&
-           widget.password != widget.repeatPassword;
-  }
+  bool get _mismatch =>
+      (password?.isNotEmpty ?? false) &&
+      (repeatPassword?.isNotEmpty ?? false) &&
+      password != repeatPassword;
 
   @override
   Widget build(BuildContext context) {
     return Column(
+      crossAxisAlignment: CrossAxisAlignment.stretch,
       children: [
-        Row(
+        AdaptiveRow(
+          minChildWidth: 220,
           children: [
-            Text("Password:\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t ", style: TextStyle(color: AppTheme.white)),
-            const SizedBox(width: 10),
-            SizedBox(
-              width: 180,
-              child: TextField(
-                controller: widget.passwordController,
-                obscureText: _obscurePassword,
-                onChanged: widget.onPasswordChangedText,
-                style: TextStyle(color: AppTheme.white),
-                decoration: InputDecoration(
-                  hintText: 'Enter password',
-                  hintStyle: TextStyle(color: AppTheme.shadow),
-                  isDense: true,
-                  border: const OutlineInputBorder(),
-                  suffixIcon: IconButton(
-                    icon: Icon(
-                      _obscurePassword ? Icons.visibility_off : Icons.visibility,
-                      color: AppTheme.white,
-                    ),
-                    onPressed: () {
-                      setState(() {
-                        _obscurePassword = !_obscurePassword;
-                      });
-                    },
-                  ),
-                ),
-              ),
+            PasswordField(
+              controller: passwordController,
+              label: 'Password',
+              onChanged: onPasswordChangedText,
             ),
-            const Spacer(),
-            Text("File encryption:", style: TextStyle(color: AppTheme.white)),
-            const SizedBox(width: 10),
-            DropdownButton<String>(
-              value: widget.encryptionLevel,
-              dropdownColor: Colors.grey[900],
-              style: TextStyle(color: AppTheme.white),
-              items: encryptionOptions.entries.map((entry) {
-                return DropdownMenuItem<String>(
-                  value: entry.key,
-                  child: Text(entry.value),
-                );
-              }).toList(),
-              onChanged: widget.onEncryptionChanged,
-            ),
-            const SizedBox(width: 20),
-          ],
-        ),
-        const SizedBox(height: 10),
-        Row(
-          children: [
-            Text("Repeat password:\t  ", style: TextStyle(color: AppTheme.white)),
-            const SizedBox(width: 10),
-            SizedBox(
-              width: 180,
-              child: TextField(
-                controller: widget.repeatPasswordController,
-                obscureText: _obscureRepeatPassword,
-                onChanged: widget.onRepeatPasswordChanged,
-                style: TextStyle(color: AppTheme.white),
-                decoration: InputDecoration(
-                  hintText: 'Repeat password',
-                  hintStyle: TextStyle(color: AppTheme.shadow),
-                  isDense: true,
-                  border: const OutlineInputBorder(),
-                  suffixIcon: IconButton(
-                    icon: Icon(
-                      _obscureRepeatPassword ? Icons.visibility_off : Icons.visibility,
-                      color: AppTheme.white,
-                    ),
-                    onPressed: () {
-                      setState(() {
-                        _obscureRepeatPassword = !_obscureRepeatPassword;
-                      });
-                    },
-                  ),
-                ),
-              ),
+            PasswordField(
+              controller: repeatPasswordController,
+              label: 'Repeat password',
+              onChanged: onRepeatPasswordChanged,
+              errorText: _mismatch ? 'Passwords do not match' : null,
             ),
           ],
         ),
-        if (_shouldShowError)
-          Padding(
-            padding: const EdgeInsets.only(top: 6.0, left: 12),
-            child: Row(
-              children: const [
-                Icon(Icons.warning, color: Colors.redAccent, size: 18),
-                SizedBox(width: 6),
-                Text(
-                  "Passwords do not match",
-                  style: TextStyle(color: Colors.redAccent),
-                ),
-              ],
+        const SizedBox(height: 14),
+        InputDecorator(
+          decoration: InputDecoration(
+            labelText: 'File encryption',
+            labelStyle: TextStyle(color: AppTheme.shadow),
+            isDense: true,
+            border: const OutlineInputBorder(),
+            contentPadding: const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
+          ),
+          child: DropdownButtonHideUnderline(
+            child: DropdownButton<String>(
+              isExpanded: true,
+              value: encryptionLevel,
+              dropdownColor: AppTheme.grey2,
+              style: Theme.of(context).textTheme.bodyLarge?.copyWith(color: AppTheme.white),
+              items: encryptionOptions.entries
+                  .map((e) => DropdownMenuItem<String>(
+                        value: e.key,
+                        child: Text(e.value, overflow: TextOverflow.ellipsis),
+                      ))
+                  .toList(),
+              onChanged: onEncryptionChanged,
             ),
           ),
+        ),
       ],
     );
   }
 }
-
-
-
-
 
 class FragButton extends StatelessWidget {
   final String? selectedFilePath;
@@ -308,8 +155,6 @@ class FragButton extends StatelessWidget {
   final VoidCallback? onSeedAdded;
   final int fragmentSize;
   final void Function()? onClearFields;
-
-
   final String? repeatPassword;
 
   const FragButton({
@@ -321,67 +166,69 @@ class FragButton extends StatelessWidget {
     required this.fragmentSize,
     this.onSeedAdded,
     this.onClearFields,
-    required this.repeatPassword, // 👈 aquí
+    required this.repeatPassword,
   });
 
-
-
-  bool get isButtonEnabled {
-    return selectedFilePath != null &&
-          selectedOutputPath != null &&
-          password != null &&
-          repeatPassword != null &&
-          password!.trim().isNotEmpty &&
-          password == repeatPassword;
+  /// Why the button is disabled, in plain words (null when it can be pressed).
+  String? get disabledReason {
+    if (selectedFilePath == null || selectedFilePath!.isEmpty) return 'Choose the file to fragment.';
+    if (selectedOutputPath == null || selectedOutputPath!.isEmpty) return 'Choose where the pieces go.';
+    if (password == null || password!.trim().isEmpty) return 'Write a password.';
+    if (password != repeatPassword) return 'Repeat the same password.';
+    return null;
   }
-
 
   @override
   Widget build(BuildContext context) {
-    return ElevatedButton(
-        
-        onPressed: isButtonEnabled
-    ? () async {
-        final events = fragment(
-          req: FragmentRequest(
-            inputPath: selectedFilePath!,
-            outputDir: selectedOutputPath!,
-            password: password!,
-            mode: encryptionModeFromKey(encryptionLevel),
-            parts: fragmentSize,
-            deleteOriginal: DeletePolicy.wipe,
-          ),
-        );
-        final result = await runOperation(context, events, title: 'Slys!');
-        if (!context.mounted || result == null) return;
+    final reason = disabledReason;
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.stretch,
+      children: [
+        FilledButton(
+          style: primaryButtonStyle(),
+          onPressed: reason != null
+              ? null
+              : () async {
+                  final events = fragment(
+                    req: FragmentRequest(
+                      inputPath: selectedFilePath!,
+                      outputDir: selectedOutputPath!,
+                      password: password!,
+                      mode: encryptionModeFromKey(encryptionLevel),
+                      parts: fragmentSize,
+                      deleteOriginal: DeletePolicy.wipe,
+                    ),
+                  );
+                  final result = await runOperation(context, events, title: 'Slys!');
+                  if (!context.mounted || result == null) return;
 
-        if (result is OperationEvent_Fragmented) {
-          // The seed is saved locally (as in 1.x) so it can be picked from the list later.
-          seedsAdd(seed: result.field0.seed);
-          final warnings = result.field0.warnings;
-          if (warnings.isNotEmpty) {
-            await showMessage(context, 'Done, with warnings', warnings.join('\n'));
-          }
-          onSeedAdded?.call();
-          onClearFields?.call();
-        } else if (result is OperationEvent_Failed) {
-          await showMessage(context, 'Error', 'Fragmentation failed:\n${result.field0.message}');
-        }
-      }
-    : null,
-      style: ElevatedButton.styleFrom(
-          backgroundColor: AppTheme.background,         // Fondo del botón
-          foregroundColor: AppTheme.secondary,              // Color del texto
-          side:  BorderSide(color: AppTheme.white),// Borde del botón
-          shape: RoundedRectangleBorder(
-            borderRadius: BorderRadius.circular(8),   // Esquinas redondeadas (opcional)
-          ),
-          padding: const EdgeInsets.symmetric(horizontal: 24, vertical: 12), // Padding interno
+                  if (result is OperationEvent_Fragmented) {
+                    // The seed is saved locally (as in 1.x) so it can be picked from the list later.
+                    seedsAdd(seed: result.field0.seed);
+                    final warnings = result.field0.warnings;
+                    if (warnings.isNotEmpty) {
+                      await showMessage(context, 'Done, with warnings', warnings.join('\n'));
+                    } else if (context.mounted) {
+                      ScaffoldMessenger.of(context).showSnackBar(const SnackBar(
+                        content: Text('Done. The seed was saved in the Seeds list.'),
+                        duration: Duration(seconds: 4),
+                      ));
+                    }
+                    onSeedAdded?.call();
+                    onClearFields?.call();
+                  } else if (result is OperationEvent_Failed) {
+                    await showMessage(context, 'Error', 'Fragmentation failed:\n${result.field0.message}');
+                  }
+                },
+          child: const Text('Slys!', style: TextStyle(fontWeight: FontWeight.bold, fontSize: 16)),
         ),
-
-      child: const Text('Slys!', style:TextStyle(fontWeight: FontWeight.bold)),
+        if (reason != null)
+          Padding(
+            padding: const EdgeInsets.only(top: 6),
+            child: Text(reason, textAlign: TextAlign.center, style: minitTextStyle()),
+          ),
+      ],
     );
-    
   }
 }
 
@@ -389,42 +236,34 @@ class SliderWidget extends StatelessWidget {
   final int currentValue;
   final ValueChanged<int> onChanged;
 
-  const SliderWidget({
-    super.key,
-    required this.currentValue,
-    required this.onChanged,
-  });
+  const SliderWidget({super.key, required this.currentValue, required this.onChanged});
 
   @override
   Widget build(BuildContext context) {
-    return Expanded(
-      child: Column(
-        crossAxisAlignment: CrossAxisAlignment.end,
-        children: [
-          Slider(
-            value: currentValue.toDouble(),
-            min: 5,
+    return Row(
+      children: [
+        Text('Pieces', style: TextStyle(color: AppTheme.white)),
+        Expanded(
+          child: Slider(
+            value: currentValue.clamp(2, 100).toDouble(),
+            min: 2,
             max: 100,
-            //divisions: 95,
-            label: "$currentValue",
+            divisions: 98,
+            label: '$currentValue',
             activeColor: AppTheme.accent,
-            inactiveColor: AppTheme.white,
-            onChanged: (double value) {
-              onChanged(value.toInt());
-            },
+            inactiveColor: AppTheme.grey,
+            onChanged: (v) => onChanged(v.round()),
           ),
-          Text(
-            "Slices: $currentValue",
-            style: TextStyle(color: AppTheme.white),
-          ),
-        ],
-      ),
+        ),
+        SizedBox(
+          width: 32,
+          child: Text('$currentValue',
+              textAlign: TextAlign.end, style: TextStyle(color: AppTheme.white, fontWeight: FontWeight.bold)),
+        ),
+      ],
     );
   }
 }
-
-
-
 
 class SeedsTable extends StatefulWidget {
   final String? selectedSeed;
@@ -485,73 +324,80 @@ class SeedsTableState extends State<SeedsTable> {
   @override
   Widget build(BuildContext context) {
     if (isLoading) {
-      return const Center(child: CircularProgressIndicator());
+      return const Padding(
+        padding: EdgeInsets.all(24),
+        child: Center(child: CircularProgressIndicator()),
+      );
     }
 
     if (!fileExists || seeds.isEmpty) {
-      return Center(
-        child: Text(
-          'No seeds found',
-          style: TextStyle(fontSize: 18, color: AppTheme.white),
+      return Padding(
+        padding: const EdgeInsets.symmetric(vertical: 28, horizontal: 8),
+        child: Column(
+          children: [
+            Icon(Icons.key_off_outlined, size: 36, color: AppTheme.shadow),
+            const SizedBox(height: 8),
+            Text('No seeds yet', style: TextStyle(fontSize: 17, color: AppTheme.white)),
+            const SizedBox(height: 4),
+            Text(
+              'Fragment a file and its seed appears here, or add one you already have.',
+              textAlign: TextAlign.center,
+              style: minitTextStyle(),
+            ),
+          ],
         ),
       );
     }
 
-    return SingleChildScrollView(
-      scrollDirection: Axis.horizontal,
-      child: ConstrainedBox(
-        constraints: BoxConstraints(minWidth: MediaQuery.of(context).size.width - 80),
-        child: DataTable(
-          headingRowColor: WidgetStateProperty.all(AppTheme.secondBackground),
-          columnSpacing: 20,
-          dataRowHeight: 48,
-          headingTextStyle: TextStyle(
-            fontWeight: FontWeight.bold,
-            color: AppTheme.white,
-            fontSize: 14,
-          ),
-          columns: const [
-            DataColumn(label: Text('File')),
-            DataColumn(label: Text('Seed')),
-          ],
-          rows: List<DataRow>.generate(
-            seeds.length,
-            (index) {
-              final seedData = seeds[index];
-              final isEvenRow = index % 2 == 0;
-
-              return DataRow(
-                selected: widget.selectedIndex == index,
-                onSelectChanged: (selected) {
-                  if (widget.selectedIndex == index) {
-                    widget.onSeedSelected('', -1);
-                  } else {
-                    widget.onSeedSelected(seedData.seed, index);
-                  }
-                },
-                color: WidgetStateProperty.resolveWith<Color?>(
-                  (Set<WidgetState> states) {
-                    if (widget.selectedIndex == index) {
-                      return AppTheme.accent;
-                    }
-                    return isEvenRow ? AppTheme.grey : AppTheme.lessGrey;
-                  },
+    return ConstrainedBox(
+      constraints: const BoxConstraints(maxHeight: 300),
+      child: ListView.separated(
+        shrinkWrap: true,
+        itemCount: seeds.length,
+        separatorBuilder: (_, __) => const SizedBox(height: 6),
+        itemBuilder: (context, index) {
+          final seedData = seeds[index];
+          final selected = widget.selectedIndex == index;
+          final fg = selected ? AppTheme.onAccent : AppTheme.white;
+          return Material(
+            color: selected ? AppTheme.accent : AppTheme.lessGrey,
+            borderRadius: BorderRadius.circular(8),
+            child: InkWell(
+              borderRadius: BorderRadius.circular(8),
+              onTap: () {
+                if (selected) {
+                  widget.onSeedSelected('', -1);
+                } else {
+                  widget.onSeedSelected(seedData.seed, index);
+                }
+              },
+              child: Padding(
+                padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 10),
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    Text(seedData.name,
+                        maxLines: 1,
+                        overflow: TextOverflow.ellipsis,
+                        style: TextStyle(color: fg, fontWeight: FontWeight.bold)),
+                    const SizedBox(height: 2),
+                    Tooltip(
+                      message: seedData.seed,
+                      child: Text(seedData.seed,
+                          maxLines: 1,
+                          overflow: TextOverflow.ellipsis,
+                          style: TextStyle(color: fg.withValues(alpha: 0.8), fontSize: 12, fontFamily: 'monospace')),
+                    ),
+                  ],
                 ),
-                cells: [
-                  DataCell(Text(seedData.name, style:  TextStyle(color: AppTheme.white))),
-                  DataCell(Text(seedData.seed, style:  TextStyle(color: AppTheme.white))),
-                ],
-              );
-            },
-          ),
-        ),
+              ),
+            ),
+          );
+        },
       ),
     );
-
   }
 }
-
-
 
 class RecomposeButton extends StatelessWidget {
   final String? seed;
@@ -571,8 +417,9 @@ class RecomposeButton extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    return ElevatedButton(
-      onPressed: seed != null && password != null && inputPath != null
+    final ready = seed != null && (password?.isNotEmpty ?? false) && (inputPath?.isNotEmpty ?? false);
+    return FilledButton(
+      onPressed: ready
           ? () async {
               // 👉 Buscar valor persistente
               final prefs = await SharedPreferences.getInstance();
@@ -619,13 +466,8 @@ class RecomposeButton extends StatelessWidget {
               onClearFields?.call();
             }
           : null,
-      style: ElevatedButton.styleFrom(
-        backgroundColor: AppTheme.accent,
-      ),
-      child:  Text(
-        "Recompose!",
-        style: TextStyle(color: Colors.white, fontWeight: FontWeight.bold),
-      ),
+      style: primaryButtonStyle(),
+      child: const Text('Recompose!', style: TextStyle(fontWeight: FontWeight.bold)),
     );
   }
 
@@ -660,7 +502,7 @@ class DeleteSeedButton extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    return ElevatedButton(
+    return OutlinedButton(
       onPressed: seed != null
           ? () async {
               final removed = _removeSeedFromList(seed!);
@@ -676,10 +518,11 @@ class DeleteSeedButton extends StatelessWidget {
               onRefreshRequested?.call();
             }
           : null,
-      style: ElevatedButton.styleFrom(
-        backgroundColor: Colors.redAccent,
+      style: secondaryButtonStyle().copyWith(
+        foregroundColor: WidgetStateProperty.resolveWith(
+            (s) => s.contains(WidgetState.disabled) ? null : Colors.redAccent),
       ),
-      child: const Text("Delete", style: TextStyle(color: Colors.white,fontWeight: FontWeight.bold)),
+      child: const Text('Remove', style: TextStyle(fontWeight: FontWeight.bold)),
     );
   }
 }
@@ -694,12 +537,10 @@ class AddSeedButton extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    return ElevatedButton(
+    return FilledButton(
       onPressed: () => _showSeedInputDialog(context),
-      style: ElevatedButton.styleFrom(
-        backgroundColor: Colors.green,
-      ),
-      child: const Text("Add Seed", style: TextStyle(color: Colors.white,fontWeight: FontWeight.bold),),
+      style: primaryButtonStyle(),
+      child: const Text('Add seed', style: TextStyle(fontWeight: FontWeight.bold)),
     );
   }
 

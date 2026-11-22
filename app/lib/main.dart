@@ -1,7 +1,5 @@
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
-import 'package:bitsdojo_window/bitsdojo_window.dart';
-import 'dart:ui';
 import 'package:shared_preferences/shared_preferences.dart';
 
 import './screens/home/home_screen.dart';
@@ -33,40 +31,12 @@ void main() async {
   String accentColor = prefs.getString(kAccentColorKey) ?? 'Purple';
   AppTheme.setAccentColor(accentColor);
 
-   runApp(
+  runApp(
     ChangeNotifierProvider(
       create: (_) => ThemeNotifier(),
       child: const MyWidget(),
     ),
   );
-
-
-
-  doWhenWindowReady(() {
-    final screenSize = window.physicalSize / window.devicePixelRatio;
-    final width = screenSize.width;
-
-    Size initialSize;
-    Size minSize;
-
-    if (width >= 3840) {
-      initialSize = const Size(1600, 1000);
-    } else if (width >= 2560) {
-      initialSize = const Size(950, 900);
-    } else if (width >= 1920) {
-      initialSize = const Size(700, 600);
-    } else {
-      initialSize = const Size(950, 900);
-    }
-
-    minSize = const Size(650, 400);
-
-    appWindow.minSize = minSize;
-    appWindow.size = initialSize;
-    appWindow.alignment = Alignment.center;
-    appWindow.title = "";
-    appWindow.show();
-  });
 }
 
 class MyWidget extends StatelessWidget {
@@ -76,9 +46,15 @@ class MyWidget extends StatelessWidget {
   Widget build(BuildContext context) {
     final isDark = Provider.of<ThemeNotifier>(context).isDarkMode;
 
+    final brightness = isDark ? Brightness.dark : Brightness.light;
     return MaterialApp(
       debugShowCheckedModeBanner: false,
-      theme: isDark ? ThemeData.dark() : ThemeData.light(),
+      title: 'SLYS',
+      theme: ThemeData(
+        brightness: brightness,
+        colorScheme: ColorScheme.fromSeed(seedColor: AppTheme.accent, brightness: brightness),
+        scaffoldBackgroundColor: AppTheme.background,
+      ),
       home: const HomeScreen(),
     );
   }
