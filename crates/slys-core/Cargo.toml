@@ -29,7 +29,7 @@ dirs = "5"
 # Read-only support for seeds and fragments made by SLYS 1.x (AES-256-CBC + PBKDF2).
 aes = "0.8"
 cbc = "0.1"
-cipher = { version = "0.4", features = ["block-padding"] }
+cipher = { version = "0.5", features = ["block-padding"] }
 pbkdf2 = "0.12"
 
 [target.'cfg(unix)'.dependencies]
