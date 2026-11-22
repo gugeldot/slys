@@ -1,14 +1,32 @@
 version: 2
 updates:
+  # Rust crates. Cryptographic crates are grouped on their own: a major version changes their API
+  # and must be reviewed and tested by hand (see documentation/SECURITY_ARCHITECTURE.md), so they
+  # never ride along with harmless updates.
   - package-ecosystem: cargo
     directory: /
     schedule:
       interval: weekly
+    open-pull-requests-limit: 3
+    groups:
+      crypto:
+        patterns: ["aes", "aes-gcm", "argon2", "cbc", "cipher", "hkdf", "pbkdf2", "sha2", "rand", "zeroize", "crc32fast"]
+      rust-other:
+        patterns: ["*"]
+        update-types: ["minor", "patch"]
   - package-ecosystem: pub
     directory: /app
     schedule:
       interval: weekly
+    open-pull-requests-limit: 3
+    groups:
+      flutter:
+        patterns: ["*"]
   - package-ecosystem: github-actions
     directory: /
     schedule:
       interval: weekly
+    open-pull-requests-limit: 3
+    groups:
+      actions:
+        patterns: ["*"]
