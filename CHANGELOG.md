@@ -2,7 +2,7 @@
 
 Format: [Keep a Changelog](https://keepachangelog.com/). Versions follow [SemVer](https://semver.org/).
 
-## [Unreleased]
+## [1.7.0] - 2026-11-22
 
 ### Changed
 - Cryptography dependencies moved to their current major versions (`argon2` 0.6, `hkdf` 0.13,
