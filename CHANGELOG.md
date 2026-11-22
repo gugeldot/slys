@@ -2,6 +2,13 @@
 
 Format: [Keep a Changelog](https://keepachangelog.com/). Versions follow [SemVer](https://semver.org/).
 
+## [Unreleased]
+
+### Changed
+- Cryptography dependencies moved to their current major versions (`argon2` 0.6, `hkdf` 0.13,
+  `sha2` 0.11, `rand` 0.10, `aes` 0.9, `cbc` 0.2, `cipher` 0.5, `pbkdf2` 0.13). The formats do not
+  change: seeds and fragments made by 1.6.x rebuild byte for byte, and SLYS 1.x seeds still open.
+
 ## [1.6.1] - 2026-11-22
 
 ### Changed
