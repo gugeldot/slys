@@ -1,26 +1,37 @@
 #!/usr/bin/env python3
-"""Fill the SHA-256 placeholders in index.html from the release files.
+"""Fill the SHA-256 placeholders in index.html from a release's SHA256SUMS file.
 
-Usage:  python3 tools/fill-checksums.py Slys_Installer.exe Slys_Linux.zip
-(first argument = Windows installer, second = Linux ZIP; use the exact files you upload to GitHub Releases)
+Usage:  python3 site/tools/fill-checksums.py SHA256SUMS
+
+SHA256SUMS is the file the Release workflow publishes (lines of "<sha256>  <file name>").
+Windows card <- Slys_Installer.exe, Linux card <- Slys.flatpak and Slys_Linux.zip.
 """
-import hashlib, re, sys, pathlib
+import pathlib
+import re
+import sys
 
-def sha256(path):
-    h = hashlib.sha256()
-    with open(path, 'rb') as f:
-        for block in iter(lambda: f.read(1 << 20), b''):
-            h.update(block)
-    return h.hexdigest()
+WANTED = {
+    "windows": "Slys_Installer.exe",
+    "flatpak": "Slys.flatpak",
+    "linux": "Slys_Linux.zip",
+}
 
-if len(sys.argv) != 3:
+if len(sys.argv) != 2:
     sys.exit(__doc__)
-index = pathlib.Path(__file__).resolve().parent.parent / 'index.html'
-html = index.read_text(encoding='utf8')
-for key, file in (('windows', sys.argv[1]), ('linux', sys.argv[2])):
-    digest = sha256(file)
-    html, n = re.subn(r'(<code id="sha-%s">)[^<]*(</code>)' % key, r'\g<1>%s\g<2>' % digest, html)
+
+sums = {}
+for line in pathlib.Path(sys.argv[1]).read_text(encoding="utf8").splitlines():
+    m = re.match(r"^([0-9a-fA-F]{64})\s+\*?(.+)$", line.strip())
+    if m:
+        sums[m.group(2).strip()] = m.group(1).lower()
+
+index = pathlib.Path(__file__).resolve().parent.parent / "index.html"
+html = index.read_text(encoding="utf8")
+for key, name in WANTED.items():
+    if name not in sums:
+        sys.exit("%s is not listed in %s" % (name, sys.argv[1]))
+    html, n = re.subn(r'(<code id="sha-%s">)[^<]*(</code>)' % key, r"\g<1>%s\g<2>" % sums[name], html)
     if n != 1:
-        sys.exit('placeholder sha-%s not found' % key)
-    print(key, digest)
-index.write_text(html, encoding='utf8')
+        sys.exit("placeholder sha-%s not found in index.html" % key)
+    print("%-8s %s  %s" % (key, sums[name], name))
+index.write_text(html, encoding="utf8")

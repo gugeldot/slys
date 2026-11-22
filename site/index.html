@@ -4,10 +4,10 @@
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
 <title>SLYS | Fragment &amp; Encrypt Your Files for Windows &amp; Linux</title>
-<meta name="description" content="SLYS is a desktop tool that splits any file into individually encrypted AES-256 fragments. Rebuild it only with your password and your encrypted seed.">
+<meta name="description" content="SLYS is a free, open-source desktop tool that splits any file into individually encrypted AES-256-GCM fragments. Rebuild it only with your password and your encrypted seed.">
 <meta name="author" content="Rodrigo Palomo Cuenca">
 <meta name="theme-color" content="#181818">
-<link rel="canonical" href="https://gugeldot.github.io/slys-web/">
+<link rel="canonical" href="https://gugeldot.github.io/slys/">
 <link rel="icon" href="favicon.ico" sizes="any">
 <link rel="icon" type="image/png" sizes="32x32" href="assets/icons/favicon-32x32.png">
 <link rel="icon" type="image/png" sizes="16x16" href="assets/icons/favicon-16x16.png">
@@ -17,8 +17,8 @@
 <meta property="og:site_name" content="SLYS">
 <meta property="og:title" content="SLYS | Fragment &amp; Encrypt Your Files for Windows &amp; Linux">
 <meta property="og:description" content="SLYS is a desktop tool that splits any file into individually encrypted AES-256 fragments. Rebuild it only with your password and your encrypted seed.">
-<meta property="og:url" content="https://gugeldot.github.io/slys-web/">
-<meta property="og:image" content="https://gugeldot.github.io/slys-web/assets/og/og-slys.png">
+<meta property="og:url" content="https://gugeldot.github.io/slys/">
+<meta property="og:image" content="https://gugeldot.github.io/slys/assets/og/og-slys.png">
 <meta property="og:image:type" content="image/png">
 <meta property="og:image:width" content="1200">
 <meta property="og:image:height" content="627">
@@ -27,7 +27,7 @@
 <meta name="twitter:card" content="summary_large_image">
 <meta name="twitter:title" content="SLYS | Fragment &amp; Encrypt Your Files for Windows &amp; Linux">
 <meta name="twitter:description" content="SLYS is a desktop tool that splits any file into individually encrypted AES-256 fragments. Rebuild it only with your password and your encrypted seed.">
-<meta name="twitter:image" content="https://gugeldot.github.io/slys-web/assets/og/og-slys.png">
+<meta name="twitter:image" content="https://gugeldot.github.io/slys/assets/og/og-slys.png">
 <meta name="twitter:image:alt" content="SLYS logo with the tagline Fragment and Encrypt">
 
 <link rel="preload" href="assets/fonts/roboto-latin.woff2" as="font" type="font/woff2" crossorigin>
@@ -41,16 +41,18 @@
   "name": "SLYS",
   "alternateName": "SLYS Desktop",
   "description": "Desktop tool that fragments a file into encrypted pieces and rebuilds it only with the password and the encrypted seed generated when fragmenting.",
-  "url": "https://gugeldot.github.io/slys-web/",
-  "image": "https://gugeldot.github.io/slys-web/assets/og/og-slys.png",
+  "url": "https://gugeldot.github.io/slys/",
+  "image": "https://gugeldot.github.io/slys/assets/og/og-slys.png",
   "applicationCategory": "SecurityApplication",
   "operatingSystem": "Windows 10, Windows 11, Linux",
-  "softwareVersion": "1.5.2",
+  "softwareVersion": "1.6.0",
+  "license": "https://www.gnu.org/licenses/gpl-3.0.html",
+  "codeRepository": "https://github.com/gugeldot/slys",
+  "downloadUrl": "https://github.com/gugeldot/slys/releases/latest",
   "offers": { "@type": "Offer", "price": "0", "priceCurrency": "USD" },
   "author": { "@type": "Person", "name": "Rodrigo Palomo Cuenca", "alternateName": "Gugeldot", "url": "https://gugeldot.github.io/gugeldots-site/" }
 }
 </script>
-<!-- TODO: the source repository (gugeldot/slys) is private, so no code, issue or release links point to it. Re-add them if it becomes public, and add "license" and "downloadUrl" to this JSON-LD. -->
 </head>
 <body>
 <a class="skip" href="#main">Skip to content</a>
@@ -120,7 +122,7 @@
     <article class="card reveal" style="--d:.11s">
       <span class="tag"><svg class="ico" aria-hidden="true"><use href="#i-key"/></svg></span>
       <h3>A seed to rebuild it</h3>
-      <p>After fragmenting you get a seed: encrypted text that records the file name, fragment count, mode and fragment names.</p>
+      <p>After fragmenting you get a seed: encrypted text with a checksum that records the file name, fragment count, mode and fragment names.</p>
     </article>
     <article class="card reveal" style="--d:.18s">
       <span class="tag"><svg class="ico" aria-hidden="true"><use href="#i-lock"/></svg></span>
@@ -140,11 +142,10 @@
     <div class="flow"><span class="flow-t">Recompose</span><span class="node">Seed + password</span><svg class="ico arr" aria-hidden="true"><use href="#i-arrow"/></svg><span class="node">Pieces folder</span><svg class="ico arr" aria-hidden="true"><use href="#i-arrow"/></svg><span class="node hi">File</span></div>
   </div>
   <div class="facts reveal">
-    <div class="fact"><b>AES-256</b><span>CBC mode, random IV per piece</span></div>
-    <div class="fact"><b>100,000</b><span>PBKDF2-HMAC-SHA256 iterations</span></div>
-    <div class="fact"><b>Random salt</b><span>new for every encrypted piece</span></div>
+    <div class="fact"><b>AES-256-GCM</b><span>authenticated: any change to a piece is detected</span></div>
+    <div class="fact"><b>Argon2id</b><span>64 MiB, 3 passes: password to key</span></div>
+    <div class="fact"><b>SHA-256</b><span>checked end to end before anything is deleted</span></div>
   </div>
-  <!-- TODO: confirm these parameters still match the 1.5.2 build (source: slys/Source/backend/src/cryption.rs). -->
 
   <h3 class="sub" id="modes">Choose how much to encrypt</h3>
   <div class="card modes reveal">
@@ -152,61 +153,56 @@
       <legend class="sr-only">Encryption mode</legend>
       <div class="seg" role="radiogroup">
         <input type="radio" name="mode" id="m-none" value="none"><label for="m-none">None</label>
-        <input type="radio" name="mode" id="m-mid" value="mid" checked><label for="m-mid">Mid (default)</label>
-        <input type="radio" name="mode" id="m-high" value="high"><label for="m-high">High</label>
+        <input type="radio" name="mode" id="m-mid" value="mid"><label for="m-mid">Mid</label>
+        <input type="radio" name="mode" id="m-high" value="high" checked><label for="m-high">High (default)</label>
       </div>
     </fieldset>
     <div class="fraglist" aria-hidden="true" data-frags>
       <span class="frag enc" style="--i:0"><svg class="lock" viewBox="0 0 24 24" aria-hidden="true"><path class="shackle" d="M8 11V7a4 4 0 0 1 8 0v4" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round"/><rect class="body" x="5" y="11" width="14" height="10" rx="2.5" fill="currentColor"/></svg></span>
-      <span class="frag" style="--i:1"><svg class="lock" viewBox="0 0 24 24" aria-hidden="true"><path class="shackle" d="M8 11V7a4 4 0 0 1 8 0v4" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round"/><rect class="body" x="5" y="11" width="14" height="10" rx="2.5" fill="currentColor"/></svg></span>
-      <span class="frag" style="--i:2"><svg class="lock" viewBox="0 0 24 24" aria-hidden="true"><path class="shackle" d="M8 11V7a4 4 0 0 1 8 0v4" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round"/><rect class="body" x="5" y="11" width="14" height="10" rx="2.5" fill="currentColor"/></svg></span>
-      <span class="frag" style="--i:3"><svg class="lock" viewBox="0 0 24 24" aria-hidden="true"><path class="shackle" d="M8 11V7a4 4 0 0 1 8 0v4" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round"/><rect class="body" x="5" y="11" width="14" height="10" rx="2.5" fill="currentColor"/></svg></span>
-      <span class="frag" style="--i:4"><svg class="lock" viewBox="0 0 24 24" aria-hidden="true"><path class="shackle" d="M8 11V7a4 4 0 0 1 8 0v4" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round"/><rect class="body" x="5" y="11" width="14" height="10" rx="2.5" fill="currentColor"/></svg></span>
-      <span class="frag" style="--i:5"><svg class="lock" viewBox="0 0 24 24" aria-hidden="true"><path class="shackle" d="M8 11V7a4 4 0 0 1 8 0v4" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round"/><rect class="body" x="5" y="11" width="14" height="10" rx="2.5" fill="currentColor"/></svg></span>
-      <span class="frag" style="--i:6"><svg class="lock" viewBox="0 0 24 24" aria-hidden="true"><path class="shackle" d="M8 11V7a4 4 0 0 1 8 0v4" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round"/><rect class="body" x="5" y="11" width="14" height="10" rx="2.5" fill="currentColor"/></svg></span>
+      <span class="frag enc" style="--i:1"><svg class="lock" viewBox="0 0 24 24" aria-hidden="true"><path class="shackle" d="M8 11V7a4 4 0 0 1 8 0v4" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round"/><rect class="body" x="5" y="11" width="14" height="10" rx="2.5" fill="currentColor"/></svg></span>
+      <span class="frag enc" style="--i:2"><svg class="lock" viewBox="0 0 24 24" aria-hidden="true"><path class="shackle" d="M8 11V7a4 4 0 0 1 8 0v4" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round"/><rect class="body" x="5" y="11" width="14" height="10" rx="2.5" fill="currentColor"/></svg></span>
+      <span class="frag enc" style="--i:3"><svg class="lock" viewBox="0 0 24 24" aria-hidden="true"><path class="shackle" d="M8 11V7a4 4 0 0 1 8 0v4" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round"/><rect class="body" x="5" y="11" width="14" height="10" rx="2.5" fill="currentColor"/></svg></span>
+      <span class="frag enc" style="--i:4"><svg class="lock" viewBox="0 0 24 24" aria-hidden="true"><path class="shackle" d="M8 11V7a4 4 0 0 1 8 0v4" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round"/><rect class="body" x="5" y="11" width="14" height="10" rx="2.5" fill="currentColor"/></svg></span>
+      <span class="frag enc" style="--i:5"><svg class="lock" viewBox="0 0 24 24" aria-hidden="true"><path class="shackle" d="M8 11V7a4 4 0 0 1 8 0v4" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round"/><rect class="body" x="5" y="11" width="14" height="10" rx="2.5" fill="currentColor"/></svg></span>
+      <span class="frag enc" style="--i:6"><svg class="lock" viewBox="0 0 24 24" aria-hidden="true"><path class="shackle" d="M8 11V7a4 4 0 0 1 8 0v4" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round"/><rect class="body" x="5" y="11" width="14" height="10" rx="2.5" fill="currentColor"/></svg></span>
       <span class="frag enc" style="--i:7"><svg class="lock" viewBox="0 0 24 24" aria-hidden="true"><path class="shackle" d="M8 11V7a4 4 0 0 1 8 0v4" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round"/><rect class="body" x="5" y="11" width="14" height="10" rx="2.5" fill="currentColor"/></svg></span>
     </div>
     <div aria-live="polite">
-      <p class="mode-desc" data-mode="none"><strong>None</strong> · fastest. No fragment is encrypted. The seed still is.</p>
-      <p class="mode-desc on" data-mode="mid"><strong>Mid</strong> · balanced. The first and last fragment are encrypted, the ones in between are stored as they are.</p>
-      <p class="mode-desc" data-mode="high"><strong>High</strong> · slowest. Every fragment is encrypted.</p>
+      <p class="mode-desc" data-mode="none"><strong>None</strong> · obfuscation only. No fragment is encrypted: they are raw slices with random names. The seed still is encrypted.</p>
+      <p class="mode-desc" data-mode="mid"><strong>Mid</strong> · not recommended. Only the first and last fragment are encrypted; most of the file stays readable.</p>
+      <p class="mode-desc on" data-mode="high"><strong>High</strong> · recommended, and the default. Every fragment is encrypted and authenticated.</p>
     </div>
-    <p class="note"><svg class="ico" role="img" aria-label="Warning"><use href="#i-warn"/></svg><span>If the content of the file itself must stay confidential, choose <strong>High</strong>. In Mid and None, part of the file is stored unencrypted.</span></p>
+    <p class="note"><svg class="ico" role="img" aria-label="Warning"><use href="#i-warn"/></svg><span>If the content of the file itself must stay confidential, choose <strong>High</strong>. In Mid and None, part or all of the file is stored unencrypted.</span></p>
   </div>
-  <!-- TODO: confirm the mode behaviour for 1.5.2 (source: slys/Source/backend/src/main.rs, "Partial" = first and last fragment, "Total" = all). -->
 </section>
 
 <section id="usage">
   <div class="head reveal">
     <span class="eyebrow">Usage</span>
     <h2>How to use it</h2>
-    <p>Fragment a file in six steps, rebuild it in five.</p>
+    <p>Fragment a file in four steps, rebuild it in four.</p>
   </div>
   <div class="two">
     <article class="card reveal">
       <h3>To fragment</h3>
       <ol class="todo-list">
-        <li>Select the target file. Give it a name without spaces or special symbols first.</li>
-        <li>Select the output folder where the fragments will be saved.</li>
-        <li>Select the encryption mode. Mid is the default; <a href="#modes">compare them</a>.</li>
-        <li>Choose the number of fragments with the slider, or leave the default (5, adjustable from 5 to 100).</li>
-        <li>Enter a password, and repeat it. You will need it to recompose.</li>
-        <li>Press <em>Slys!</em>. The fragments are created and the seed appears in the Seeds list.</li>
+        <li>In the <em>Fragment</em> tab, pick the file: press Browse or drag it onto the box.</li>
+        <li>Check the output folder. By default it is <code>slys_fragments</code> on your Desktop.</li>
+        <li>Choose a password (at least 10 characters, with upper and lower case, a number and a symbol; the requirements turn green as you meet them). Keep <em>High</em> encryption and the number of pieces (10 by default, 2 to 100).</li>
+        <li>Press <em>Slys!</em>. The pieces are created and the seed is saved in the <em>Recompose</em> tab.</li>
       </ol>
-      <!-- TODO: confirm for 1.5.2: default fragment count (source: 5; older screenshots show 25) and the "no spaces or symbols" file name rule. -->
     </article>
     <article class="card reveal" style="--d:.1s">
       <h3>To recompose</h3>
       <ol class="todo-list">
-        <li>Select the seed in the Seeds list, or press <em>Add Seed</em> to paste one.</li>
-        <li>Enter the password.</li>
-        <li>Select the folder where the fragments are ("Where are the slices?").</li>
+        <li>In the <em>Recompose</em> tab, select the seed in the list, or press <em>Add seed</em> to paste one.</li>
+        <li>Point to the folder with the pieces (Browse, or drag the folder) and enter the password.</li>
         <li>Press <em>Recompose!</em></li>
-        <li>Choose where to save the output file.</li>
+        <li>Choose where to save the file; the dialog opens on your Desktop.</li>
       </ol>
     </article>
   </div>
-  <p class="note reveal" role="note"><svg class="ico" role="img" aria-label="Warning"><use href="#i-warn"/></svg><span>SLYS deletes the original file after fragmenting, and deletes the fragments after a successful recomposition. The deletion is a normal file removal, not a secure wipe. Keep a backup until you have recomposed the file once and checked it.</span></p>
+  <p class="note reveal" role="note"><svg class="ico" role="img" aria-label="Warning"><use href="#i-warn"/></svg><span>SLYS deletes the original after fragmenting and the pieces after rebuilding, but only once the result has been verified byte for byte. The deletion overwrites the data on a best-effort basis: on SSDs and some file systems traces may remain, so full-disk encryption is the real protection. Keep a backup until you have rebuilt the file once and checked it.</span></p>
 
   <h3 class="sub" id="seed-safety">Keep your seed safe</h3>
   <p class="sub-lead">To recover a file you need all three: the seed, the password and the fragments.</p>
@@ -214,7 +210,7 @@
     <li>Copy the seed outside the app too: password manager, encrypted note or removable drive. The app's own list lives on your computer.</li>
     <li>Keep the password apart from the seed. SLYS does not store it: lose it and the file is gone.</li>
     <li>Use a long, unique password. Anyone with the seed can try to guess it offline.</li>
-    <li>Do not rename or edit the fragment files.</li>
+    <li>You can move the pieces to any folder, but keep them together and do not rename or edit them.</li>
     <li>Test a recomposition on a copy before relying on SLYS.</li>
   </ul>
 </section>
@@ -223,7 +219,7 @@
   <div class="head reveal">
     <span class="eyebrow">Screenshots</span>
     <h2>See it in action</h2>
-    <p>SLYS Desktop on Windows 10. Click an image to enlarge it.</p>
+    <p>SLYS Desktop 1.5 on Windows 10 (the interface was redesigned in 1.6). Click an image to enlarge it.</p>
   </div>
   <div class="carousel reveal" role="region" aria-roledescription="carousel" aria-label="Screenshots of SLYS Desktop">
     <div class="viewport" tabindex="0">
@@ -306,51 +302,53 @@
   <div class="head reveal">
     <span class="eyebrow">Download</span>
     <h2>Get the latest version</h2>
-    <p>Current version: <strong>1.5.2</strong>. Compare the SHA-256 checksum of each file before running it.</p>
+    <p>Current version: <strong>1.6.0</strong>, free and open source (GPL-3.0). Compare the SHA-256 checksum of each file before running it.</p>
   </div>
   <div class="os-grid">
     <article class="card os reveal" data-os="windows">
       <img src="assets/img/os-windows.webp" width="240" height="240" loading="lazy" decoding="async" alt="Windows logo">
       <h3>Windows 10/11</h3>
       <p class="rec" hidden>Recommended for your system</p>
-      <p><a class="btn" href="https://github.com/gugeldot/slys/releases/latest" target="_blank" rel="noopener noreferrer"><svg class="ico" aria-hidden="true"><use href="#i-download"/></svg>Download 1.5.2<span class="sr-only"> (opens in a new tab)</span></a></p>
-      <p class="meta">Installer (.exe)</p>
+      <p><a class="btn" href="https://github.com/gugeldot/slys/releases/latest" target="_blank" rel="noopener noreferrer"><svg class="ico" aria-hidden="true"><use href="#i-download"/></svg>Download 1.6.0<span class="sr-only"> (opens in a new tab)</span></a></p>
+      <p class="meta">Installer (.exe). A portable ZIP is on the release page too.</p>
       <p class="hash"><span>SHA-256</span> <code id="sha-windows">Listed on the release page</code></p>
     </article>
     <article class="card os reveal" style="--d:.08s" data-os="linux">
       <img src="assets/img/os-linux.webp" width="206" height="240" loading="lazy" decoding="async" alt="Linux penguin logo">
       <h3>Linux</h3>
       <p class="rec" hidden>Recommended for your system</p>
-      <p><a class="btn" href="https://github.com/gugeldot/slys/releases/latest" target="_blank" rel="noopener noreferrer"><svg class="ico" aria-hidden="true"><use href="#i-download"/></svg>Download 1.5.2<span class="sr-only"> (opens in a new tab)</span></a></p>
-      <p class="meta">ZIP archive, 64-bit (x86-64)</p>
-      <p class="hash"><span>SHA-256</span> <code id="sha-linux">Listed on the release page</code></p>
+      <p><a class="btn" href="https://github.com/gugeldot/slys/releases/latest" target="_blank" rel="noopener noreferrer"><svg class="ico" aria-hidden="true"><use href="#i-download"/></svg>Download 1.6.0<span class="sr-only"> (opens in a new tab)</span></a></p>
+      <p class="meta">Flatpak (<code>Slys.flatpak</code>) or a ZIP, 64-bit (x86-64)</p>
+      <p class="hash"><span>Flatpak SHA-256</span> <code id="sha-flatpak">Listed on the release page</code></p>
+      <p class="hash"><span>ZIP SHA-256</span> <code id="sha-linux">Listed on the release page</code></p>
     </article>
     <article class="card os os-soon reveal" style="--d:.16s" data-os="macos">
       <img src="assets/img/os-macos.webp" width="240" height="240" loading="lazy" decoding="async" alt="Apple logo">
       <h3>macOS</h3>
-      <p><span class="status">Planned for v3.0</span></p>
+      <p><span class="status">Planned</span></p>
       <p class="meta">Not available yet</p>
     </article>
   </div>
-  <!-- TODO: BLOCKER. The download buttons point at github.com/gugeldot/slys/releases/latest, which returns 404 while the repository is private. Host the installer and ZIP somewhere public (public releases repo, or files in this repo) and update these links. -->
-  <!-- TODO: SHA-256 values and exact asset names (assumed Slys_Installer.exe and Slys_Linux.zip). Run tools/fill-checksums.py to fill them in. -->
+  <!-- tools/fill-checksums.py copies the SHA-256 values from the release's SHA256SUMS file into the codes above. -->
 
   <div class="accs">
     <details class="acc reveal">
       <summary>Verify your download</summary>
       <div class="body">
-        <p>Compare the checksum of the file you downloaded with the one listed above. If they differ, do not run it.</p>
+        <p>Every release has a <code>SHA256SUMS</code> file and a build attestation that proves who built each file and from which commit. If anything does not match, do not run the file.</p>
         <p><strong>Windows (PowerShell)</strong></p>
         <pre><code>Get-FileHash .\Slys_Installer.exe -Algorithm SHA256</code></pre>
         <p><strong>Linux</strong></p>
-        <pre><code>sha256sum Slys_Linux.zip</code></pre>
+        <pre><code>sha256sum -c SHA256SUMS</code></pre>
+        <p><strong>Build attestation</strong> (needs the GitHub CLI)</p>
+        <pre><code>gh attestation verify Slys.flatpak --repo gugeldot/slys</code></pre>
       </div>
     </details>
     <details class="acc reveal">
-      <summary>Installer and ZIP</summary>
+      <summary>Installing on Linux</summary>
       <div class="body">
-        <p>Windows is distributed as an installer that sets the application up for you. The Linux build is a self-contained folder (executable plus libraries), distributed as a ZIP: extract it anywhere and run <code>slys_frontend</code>. If your system does not run it, mark it as executable with <code>chmod +x slys_frontend</code>.</p>
-        <!-- TODO: confirm with the author the reason for installer (Windows) vs ZIP (Linux); the text above only describes what each package is. -->
+        <p><strong>Flatpak</strong> (recommended): <code>flatpak install --user Slys.flatpak</code>, then run SLYS from your applications menu or with <code>flatpak run io.github.gugeldot.Slys</code>. It has no network access and cannot see folders like <code>~/.ssh</code>.</p>
+        <p><strong>ZIP</strong>: extract it anywhere and run <code>slys</code>. If your system does not run it, mark it as executable with <code>chmod +x slys</code>.</p>
       </div>
     </details>
     <details class="acc reveal">
@@ -358,16 +356,15 @@
       <div class="body">
         <ul class="plain">
           <li>Windows 10 or 11, or a 64-bit (x86-64) Linux distribution with a graphical desktop.</li>
-          <li>Free memory at least as large as the file you fragment: SLYS reads the whole file into memory.</li>
+          <li>Files of any size: SLYS processes them in 64 KiB chunks instead of loading them into memory.</li>
           <li>The file must have at least as many bytes as the number of fragments you choose.</li>
         </ul>
-        <!-- TODO: minimum Windows build, minimum glibc / distributions tested, and macOS/ARM status. -->
       </div>
     </details>
     <details class="acc reveal">
       <summary>Windows SmartScreen warning</summary>
       <div class="body">
-        <p>Windows may show a SmartScreen warning the first time you run the installer. The executable is not signed with a code-signing certificate, which this independent project cannot currently afford. SmartScreen flags unsigned files by default. To continue, choose <em>More info</em>, then <em>Run anyway</em>. Verifying the SHA-256 checksum above first is recommended.</p>
+        <p>Windows may show a SmartScreen warning the first time you run the installer. The executable is not signed with a code-signing certificate yet (signing is planned). SmartScreen flags unsigned files by default. To continue, choose <em>More info</em>, then <em>Run anyway</em>. Verifying the SHA-256 checksum above first is recommended.</p>
       </div>
     </details>
   </div>
@@ -381,13 +378,10 @@
   <ol class="timeline reveal">
     <li class="done"><h3>1.0 <span class="badge">Released</span></h3><p>Stable basic version for Windows and Linux.</p></li>
     <li class="done"><h3>1.5 <span class="badge">Released</span></h3><p>"Settings" tab for personalized persistence: output and input paths, and color themes.</p></li>
-    <li><h3>1.6 <span class="badge">Planned</span></h3><ul><li>Overall refurbish, 2026 update</li><li>Open source code release</li></ul></li>
-    <li><h3>2.0 <span class="badge">Planned</span></h3><ul><li>Inactivity wipe (coming in future versions)</li><li>Seed CRC inclusion</li></ul></li>
+    <li class="done"><h3>1.6 <span class="badge">Released</span></h3><ul><li>Open source (GPL-3.0), one program: the Rust core runs inside the app</li><li>New seed format with a checksum; AES-256-GCM and Argon2id</li><li>Inactivity wipe of the saved seeds (optional)</li><li>New responsive interface, Flatpak, command-line tool</li></ul></li>
+    <li><h3>Next <span class="badge">Planned</span></h3><ul><li>Signed Windows builds</li><li>Flathub</li></ul></li>
     <li><h3>3.0 <span class="badge">Planned</span></h3><ul><li>macOS version</li><li>Android version</li></ul></li>
   </ol>
-  <!-- TODO: macOS was listed under 2.0 on the previous site; the brief says v3.0. Confirm. -->
-
-  <!-- TODO: changelog details for 1.5.1 and 1.5.2 (the roadmap above already lists 1.0 and 1.5). -->
 </section>
 
 <section id="about">
