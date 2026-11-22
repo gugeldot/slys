@@ -36,6 +36,8 @@ Format: [Keep a Changelog](https://keepachangelog.com/). Versions follow [SemVer
   residual risks.
 
 ### Interface
+- Linux: the app prefers X11/XWayland. Flutter's Wayland path painted the UI at a quarter of the window
+  on KDE Plasma with scaled monitors. `GDK_BACKEND=wayland` still forces Wayland.
 - Native window frame instead of the fake title bar; the layout adapts to any window size
   (two columns on wide windows, stacked on narrow ones) and the window can be resized freely.
 - Theme and accent colour apply instantly (the app no longer quits to apply them).

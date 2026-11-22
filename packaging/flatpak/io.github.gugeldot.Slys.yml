@@ -10,7 +10,8 @@ command: slys
 finish-args:
   - --share=ipc
   - --socket=wayland
-  - --socket=fallback-x11
+  # X11 first (see app/linux/runner/main.cc); Wayland stays available for GDK_BACKEND=wayland.
+  - --socket=x11
   - --device=dri
   # SLYS is a file tool: it reads the file you pick and writes the fragments where you choose.
   # The home folder is the least-surprising scope; there is no network access at all.
