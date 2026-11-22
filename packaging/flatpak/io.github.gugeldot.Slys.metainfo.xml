@@ -32,6 +32,11 @@
     <binary>slys</binary>
   </provides>
   <releases>
+    <release version="1.6.1" date="2026-11-22">
+      <description>
+        <p>Stricter password check: 12 characters minimum, a strength meter and a list of commonly used passwords that are refused. Character-class requirements are gone in favour of length.</p>
+      </description>
+    </release>
     <release version="1.6.0" date="2026-11-22">
       <description>
         <p>Rebuilt on a single Rust core, with a new authenticated seed format. Seeds from 1.x still work.</p>

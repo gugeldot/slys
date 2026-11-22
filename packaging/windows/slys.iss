@@ -1,5 +1,5 @@
 ; Inno Setup script for SLYS. Build with:
-;   iscc /DAppVersion=1.6.0 packaging\windows\slys.iss
+;   iscc /DAppVersion=1.6.1 packaging\windows\slys.iss
 ; The CI passes the version taken from Cargo.toml (single source of truth).
 
 #ifndef AppVersion

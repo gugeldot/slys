@@ -16,7 +16,9 @@ It protects against someone who gets some or all of the fragments (or the seed) 
 password. It does not protect against:
 
 * **A weak password.** Argon2id slows guessing down but cannot save "123456". Use a long
-  passphrase.
+  passphrase. When fragmenting, SLYS requires 12+ characters, refuses commonly used passwords
+  (offline list) and shows a strength meter; it cannot judge a password that is long but
+  personal, such as a name plus a date.
 * **A compromised computer** (malware, keylogger, someone watching while the file is rebuilt).
   When rebuilt, the plaintext file exists on disk again.
 * **Someone who has the password and the seed.**

@@ -33,20 +33,20 @@ void main() {
       ),
     ));
 
-    // Nothing focused: all six are neutral circles, none red or green.
-    expect(find.byIcon(Icons.radio_button_unchecked), findsNWidgets(6));
+    // Nothing focused: all four are neutral circles, none red or green.
+    expect(find.byIcon(Icons.radio_button_unchecked), findsNWidgets(4));
     expect(find.byIcon(Icons.cancel), findsNothing);
     expect(find.byIcon(Icons.check_circle), findsNothing);
 
     // Cursor in the first field: everything unmet turns red.
     await tester.tap(find.byType(TextField).first);
     await settle(tester);
-    expect(find.byIcon(Icons.cancel), findsNWidgets(6));
+    expect(find.byIcon(Icons.cancel), findsNWidgets(4));
 
     // Typing makes the ones that are met green and leaves the rest red.
-    await tester.enterText(find.byType(TextField).first, 'Abcdefghij1!');
+    await tester.enterText(find.byType(TextField).first, 'Tr4vel-Mug-Sunny');
     await settle(tester);
-    expect(find.byIcon(Icons.check_circle), findsNWidgets(5));
+    expect(find.byIcon(Icons.check_circle), findsNWidgets(3));
     expect(find.byIcon(Icons.cancel), findsOneWidget); // "Both passwords match"
 
     // A different repeat does not add an error line (it would push the page down).
@@ -56,9 +56,9 @@ void main() {
     expect(find.text('Passwords do not match'), findsNothing);
     expect(find.byIcon(Icons.cancel), findsOneWidget);
 
-    // The same repeat: all six green.
-    await tester.enterText(find.byType(TextField).at(1), 'Abcdefghij1!');
+    // The same repeat: all four green.
+    await tester.enterText(find.byType(TextField).at(1), 'Tr4vel-Mug-Sunny');
     await settle(tester);
-    expect(find.byIcon(Icons.check_circle), findsNWidgets(6));
+    expect(find.byIcon(Icons.check_circle), findsNWidgets(4));
   });
 }

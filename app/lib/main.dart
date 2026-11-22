@@ -5,6 +5,7 @@ import 'package:shared_preferences/shared_preferences.dart';
 import './screens/home/home_screen.dart';
 import './screens/settings/settings.dart';
 import 'utils/app_styles.dart';
+import 'utils/common_passwords.dart';
 import 'custom/theme.dart';
 import 'services/startup_state.dart';
 import 'src/rust/api/storage.dart';
@@ -13,6 +14,7 @@ import 'src/rust/frb_generated.dart';
 void main() async {
   WidgetsFlutterBinding.ensureInitialized();
   await RustLib.init();
+  await CommonPasswords.load();
 
   // Opt-in inactivity wipe: must run before anything touches the seed list.
   try {

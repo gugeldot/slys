@@ -324,7 +324,45 @@ class PasswordChecklist extends StatelessWidget {
   Widget build(BuildContext context) {
     final green = AppTheme.isDark ? Colors.greenAccent : Colors.green.shade700;
     final red = AppTheme.isDark ? Colors.redAccent : Colors.red.shade700;
-    return Wrap(
+    final strength = passwordStrength(password);
+    final meterColor = switch (strength) {
+      PasswordStrength.weak => red,
+      PasswordStrength.fair => Colors.orange,
+      PasswordStrength.good => AppTheme.isDark ? Colors.lightGreenAccent : Colors.lightGreen.shade700,
+      PasswordStrength.strong => green,
+    };
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        Row(
+          children: [
+            for (var i = 0; i < PasswordStrength.values.length; i++) ...[
+              if (i > 0) const SizedBox(width: 4),
+              Expanded(
+                child: AnimatedContainer(
+                  duration: const Duration(milliseconds: 180),
+                  height: 6,
+                  decoration: BoxDecoration(
+                    color: password.isNotEmpty && i <= strength.index
+                        ? meterColor
+                        : AppTheme.shadow.withValues(alpha: 0.3),
+                    borderRadius: BorderRadius.circular(3),
+                  ),
+                ),
+              ),
+            ],
+            const SizedBox(width: 10),
+            SizedBox(
+              width: 56,
+              child: Text(
+                password.isEmpty ? '' : strength.label,
+                style: TextStyle(color: meterColor, fontWeight: FontWeight.w600),
+              ),
+            ),
+          ],
+        ),
+        const SizedBox(height: 10),
+        Wrap(
       spacing: 18,
       runSpacing: 6,
       children: [
@@ -351,6 +389,8 @@ class PasswordChecklist extends StatelessWidget {
               ],
             );
           }),
+      ],
+        ),
       ],
     );
   }

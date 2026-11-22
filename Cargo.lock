@@ -1168,7 +1168,7 @@ checksum = "0c790de23124f9ab44544d7ac05d60440adc586479ce501c1d6d7da3cd8c9cf5"
 
 [[package]]
 name = "slys-cli"
-version = "1.6.0"
+version = "1.6.1"
 dependencies = [
  "clap",
  "indicatif",
@@ -1179,7 +1179,7 @@ dependencies = [
 
 [[package]]
 name = "slys-core"
-version = "1.6.0"
+version = "1.6.1"
 dependencies = [
  "aes",
  "aes-gcm",
@@ -1204,7 +1204,7 @@ dependencies = [
 
 [[package]]
 name = "slys_bridge"
-version = "1.6.0"
+version = "1.6.1"
 dependencies = [
  "flutter_rust_bridge",
  "slys-core",

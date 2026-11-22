@@ -2,6 +2,19 @@
 
 Format: [Keep a Changelog](https://keepachangelog.com/). Versions follow [SemVer](https://semver.org/).
 
+## [1.6.1] - 2026-11-22
+
+### Changed
+- **New password rules, following NIST SP 800-63B and OWASP.** Minimum length is now 12 characters
+  (was 10). The mandatory upper case, number and symbol are gone: they pushed people towards
+  `Password1!`, while a long phrase is far stronger. The requirements are now: 12+ characters, not a
+  commonly used password, strength at least Fair, and both fields equal.
+- **Strength meter** under the password fields (Weak, Fair, Good, Strong). It penalises repeats,
+  sequences and repeated blocks.
+- **Common passwords are refused**, also when dressed with digits or symbols (`Dragon2024!`), using
+  an offline list of about 220,000 entries built from SecLists (MIT). Nothing is sent anywhere.
+- Rebuilding still accepts any password, so seeds made with older versions keep working.
+
 ## [1.6.0] - 2026-11-22
 
 ### Changed
