@@ -86,19 +86,40 @@ void main() {
     );
     await tester.pump(const Duration(seconds: 1));
 
-    final slides = find.descendant(
-      of: find.byType(AnimatedSwitcher),
-      matching: find.byType(SlideTransition),
+    final pages = find.byWidgetPredicate(
+      (w) => w.key is ValueKey && '${(w.key as ValueKey).value}'.startsWith('tab-page-'),
     );
-    expect(slides, findsOneWidget);
+    expect(pages, findsOneWidget);
 
     await tester.tap(find.text('Recompose').first);
     await tester.pump();
     await tester.pump(const Duration(milliseconds: 100));
-    expect(slides, findsNWidgets(2), reason: 'the old page is still sliding out');
+    expect(pages, findsNWidgets(2), reason: 'the old page is still sliding out');
+
+    // Side by side at every moment: the new page is always exactly one page width after the old
+    // one (translation difference 1.0), so they never overlap and never leave a gap.
+    double? shift(String key) {
+      final f = find.byKey(ValueKey(key));
+      return f.evaluate().isEmpty ? null : tester.widget<FractionalTranslation>(f).translation.dx;
+    }
+
+    // The test clock is the real one, so the slide may end before the last check: verify every
+    // frame in which both pages exist, and require at least one.
+    var checked = 0;
+    for (var i = 0; i < 6; i++) {
+      final oldShift = shift('tab-page-0');
+      final newShift = shift('tab-page-1');
+      if (oldShift == null || newShift == null) break;
+      expect(newShift - oldShift, closeTo(1.0, 1e-9), reason: 'frame $i');
+      expect(oldShift, lessThanOrEqualTo(0), reason: 'the old page moves out to the left');
+      expect(newShift, greaterThanOrEqualTo(0), reason: 'the new page comes in from the right');
+      checked++;
+      await tester.pump(const Duration(milliseconds: 30));
+    }
+    expect(checked, greaterThanOrEqualTo(1));
 
     await tester.pump(const Duration(milliseconds: 400));
-    expect(slides, findsOneWidget);
+    expect(pages, findsOneWidget);
     expect(tester.takeException(), isNull);
   });
 }

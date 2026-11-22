@@ -36,7 +36,8 @@ Format: [Keep a Changelog](https://keepachangelog.com/). Versions follow [SemVer
   residual risks.
 
 ### Interface
-- Changing tab slides the new page in from the side it is on while the old one slides out.
+- Changing tab slides like a carousel: opaque pages side by side, the new one pushes the old one out (no
+  fade, so they never show through each other).
 - The window has its own icon (and the Flatpak ships it in 48, 64, 128 and 512 px), so taskbars and docks
   that do not read the .desktop file show it too.
 - Passwords need 10 characters instead of 12.

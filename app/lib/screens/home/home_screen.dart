@@ -14,7 +14,7 @@ import '../../services/startup_state.dart';
 import '../settings/settings.dart';
 
 /// How long the slide between tabs takes.
-const Duration _kSlide = Duration(milliseconds: 260);
+const Duration _kSlide = Duration(milliseconds: 300);
 
 class HomeScreen extends StatefulWidget {
   const HomeScreen({super.key});
@@ -141,39 +141,12 @@ class _HomeScreenState extends State<HomeScreen> {
     if (cameFromSettings && index <= 1) await refreshPrefsFromStorage();
   }
 
-  /// The current tab slides in from the side it is on, the old one slides out the other way.
-  Widget _slidingTab(Widget content) {
-    final key = ValueKey<int>(selectedTabIndex);
-    return ClipRect(
-      child: AnimatedSwitcher(
-        duration: _kSlide,
-        switchInCurve: Curves.easeOutCubic,
-        switchOutCurve: Curves.easeOutCubic,
-        layoutBuilder:
-            (current, previous) => Stack(
-              fit: StackFit.expand,
-              children: [...previous, if (current != null) current],
-            ),
-        transitionBuilder: (child, animation) {
-          final incoming = child.key == key;
-          final offset = Tween<Offset>(
-            begin: Offset(
-              incoming
-                  ? _slideDirection.toDouble()
-                  : -_slideDirection.toDouble(),
-              0,
-            ),
-            end: Offset.zero,
-          ).animate(animation);
-          return SlideTransition(
-            position: offset,
-            child: FadeTransition(opacity: animation, child: child),
-          );
-        },
-        child: KeyedSubtree(key: key, child: content),
-      ),
-    );
-  }
+  /// Pages slide like a carousel: the new one pushes the old one out, side by side.
+  Widget _slidingTab(Widget content) => _TabSlider(
+    index: selectedTabIndex,
+    direction: _slideDirection,
+    child: content,
+  );
 
   Widget _tabBar() {
     return LayoutBuilder(
@@ -341,6 +314,101 @@ class _HomeScreenState extends State<HomeScreen> {
             ),
           ],
         ),
+      ),
+    );
+  }
+}
+
+/// Slides between pages. Both pages are opaque and move together with one curve, so they sit side
+/// by side (the new one pushes the old one out) instead of fading through each other.
+class _TabSlider extends StatefulWidget {
+  final int index;
+  final int
+  direction; // 1: the new page comes from the right, -1: from the left
+  final Widget child;
+
+  const _TabSlider({
+    required this.index,
+    required this.direction,
+    required this.child,
+  });
+
+  @override
+  State<_TabSlider> createState() => _TabSliderState();
+}
+
+class _TabSliderState extends State<_TabSlider>
+    with SingleTickerProviderStateMixin {
+  late final AnimationController _controller = AnimationController(
+    vsync: this,
+    duration: _kSlide,
+  );
+  Widget? _outgoing;
+  int _outgoingIndex = 0;
+  int _direction = 1;
+
+  @override
+  void didUpdateWidget(_TabSlider old) {
+    super.didUpdateWidget(old);
+    if (old.index == widget.index) return;
+    // Keep the page we are leaving (as it was) until the slide ends.
+    _outgoing = old.child;
+    _outgoingIndex = old.index;
+    _direction = widget.direction;
+    _controller.forward(from: 0).whenComplete(() {
+      if (mounted) setState(() => _outgoing = null);
+    });
+  }
+
+  @override
+  void dispose() {
+    _controller.dispose();
+    super.dispose();
+  }
+
+  Widget _page(
+    int index,
+    Widget child,
+    Offset offset, {
+    bool interactive = true,
+  }) {
+    return FractionalTranslation(
+      key: ValueKey('tab-page-$index'),
+      translation: offset,
+      child: IgnorePointer(
+        ignoring: !interactive,
+        // Opaque: nothing of the other page shows through.
+        child: ColoredBox(color: AppTheme.background, child: child),
+      ),
+    );
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    return ClipRect(
+      child: AnimatedBuilder(
+        animation: _controller,
+        builder: (context, _) {
+          final t = Curves.easeInOutCubic.transform(_controller.value);
+          final sliding = _outgoing != null;
+          return Stack(
+            fit: StackFit.expand,
+            children: [
+              if (sliding)
+                _page(
+                  _outgoingIndex,
+                  _outgoing!,
+                  Offset(-_direction * t, 0),
+                  interactive: false,
+                ),
+              _page(
+                widget.index,
+                widget.child,
+                sliding ? Offset(_direction * (1 - t), 0) : Offset.zero,
+              ),
+            ],
+          );
+        },
       ),
     );
   }
