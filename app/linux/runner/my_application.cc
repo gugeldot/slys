@@ -64,6 +64,13 @@ static void my_application_activate(GApplication* application) {
 
   fl_register_plugins(FL_PLUGIN_REGISTRY(view));
 
+  // desktop_drop also asks the drag source for the document-portal "file transfer" key. That key
+  // can expire before it is resolved ("Invalid transfer") and then nothing arrives. Plain file
+  // URIs (text/uri-list) are offered by every file manager and are readable here because the
+  // app can see the home folder, so accept only those: this replaces the plugin's target list.
+  gtk_drag_dest_set(GTK_WIDGET(view), GTK_DEST_DEFAULT_ALL, nullptr, 0, GDK_ACTION_COPY);
+  gtk_drag_dest_add_uri_targets(GTK_WIDGET(view));
+
   gtk_widget_grab_focus(GTK_WIDGET(view));
 }
 
