@@ -1,119 +1,230 @@
 import 'package:flutter/material.dart';
-import 'about_fn.dart';
-import '../../utils/app_styles.dart';
+import 'package:flutter/services.dart';
+
+import '../../custom/custom_widgets.dart';
 import '../../src/rust/api/version.dart';
+import '../../utils/app_styles.dart';
+import 'about_fn.dart';
 
-
-Widget imageBlock(){
-  return Center(
-                child: Image.asset(
-                   AppTheme.isDark 
-                        ? 'assets/images/invert_slys.png'
-                        : 'assets/images/slys.png',
-                  height: 100,
-                  fit: BoxFit.cover,
-                ),
-              );
-}
-
-
-Widget whyTextBlock() {
-  return Column(
-    crossAxisAlignment: CrossAxisAlignment.start,
-    children: [
-      SectionHeader("Why?"),
-      Text(
-        "We're increasingly exposed to organizations and institutions accessing our files without clear or informed consent. This tool is a response to that intrusion — a way to fragment and encrypt your data so it can't be easily read or reconstructed without your permission.\n\n"
-        "By splitting and encrypting the content, it adds an extra layer of security: sensitive information can remain on your device without being immediately accessible. Only with the correct password and the Slys-generated seed can the original file be restored, giving full control back to the user.\n\n"
-        "If something happens to you, the fragments stay on your system but are useless without the password and the seed. Reinstalling the tool later and entering the seed is all it takes to rebuild your files.\n\n"
-        "An optional wipe of the app's local seed list after a period of inactivity is planned for a future version.",
-        style: defaultTextStyle(),
-      ),
-    ],
+/// About page: version first (it is what a bug report needs), then a short "why", what SLYS does,
+/// and the legal notice folded away.
+Widget aboutScreen() {
+  return SingleChildScrollView(
+    padding: const EdgeInsets.all(16),
+    child: Column(
+      crossAxisAlignment: CrossAxisAlignment.stretch,
+      children: [
+        const VersionCard(),
+        const SizedBox(height: 16),
+        _whyCard(),
+        const SizedBox(height: 16),
+        _featuresCard(),
+        const SizedBox(height: 16),
+        _legalCard(),
+        const SizedBox(height: 20),
+        paypalButton(),
+        const SizedBox(height: 8),
+      ],
+    ),
   );
 }
 
-Widget capabilitiesTextBlock(){
-  return Column(
-    crossAxisAlignment: CrossAxisAlignment.start,
-    children: [
-      SectionHeader("Capabilities"),
-              SingleChildScrollView(
-                //padding: const ,
-                child: Column(
-                  crossAxisAlignment: CrossAxisAlignment.start,
-                  children: [
-                    sectionTitle("1. File Fragmentation & Encryption"),
-                    bullet("Splits a selected file into multiple fragments."),
-                    bullet("Each fragment is encrypted individually using a user-defined password."),
-                    bullet("Fragments are stored in a way that prevents reconstruction without proper credentials."),
-                    const SizedBox(height: 24),
+/// Version, build and format at a glance, with a button that copies them for bug reports.
+class VersionCard extends StatelessWidget {
+  const VersionCard({super.key});
 
-                    sectionTitle("2. Seed Generation for Reconstruction"),
-                    bullet("After fragmentation, the system generates a unique seed required to reconstruct the original file."),
-                    bullet("The seed itself is encrypted and must be stored securely by the user."),
-                    bullet("Only with both the password and the seed can the file be fully restored via Slys."),
-                    const SizedBox(height: 24),
+  @override
+  Widget build(BuildContext context) {
+    VersionInfo? v;
+    try {
+      v = versionInfo();
+    } catch (_) {}
+    final known = v != null && v.commit != 'unknown';
+    final summary = v == null
+        ? 'SLYS (version unavailable)'
+        : 'SLYS ${v.version}${known ? ' · ${v.commit}' : ''} · seed format ${v.seedFormat}';
 
-                    sectionTitle("3. Inactivity Wipe (Planned Feature)"),
-                    bullet("Opt-in: after a period without use, the app's local list of saved seeds would be securely deleted."),
-                    bullet("Your fragments are not touched. They are already unreadable without the password and the seed."),
-                    bullet("It cannot be tamper-proof: whoever controls the computer controls its clock. It is a convenience safeguard."),
-                    const SizedBox(height: 24),
+    return AppCard(
+      title: 'SLYS',
+      trailing: IconButton.outlined(
+        icon: Icon(Icons.copy, size: 20, color: AppTheme.white),
+        tooltip: 'Copy version info (for bug reports)',
+        onPressed: () async {
+          await Clipboard.setData(ClipboardData(text: summary));
+          if (context.mounted) {
+            ScaffoldMessenger.of(context).showSnackBar(
+              const SnackBar(content: Text('Version info copied'), duration: Duration(seconds: 2)),
+            );
+          }
+        },
+      ),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Text('Fragment and encrypt your files. Rebuild them with a seed and a password.',
+              style: minitTextStyle()),
+          const SizedBox(height: 14),
+          Wrap(
+            spacing: 10,
+            runSpacing: 10,
+            children: [
+              _InfoChip(Icons.sell_outlined, 'Version', v?.version ?? '?'),
+              if (known) _InfoChip(Icons.commit, 'Build', v.commit),
+              _InfoChip(Icons.key_outlined, 'Seed format', v == null ? '?' : 'v${v.seedFormat}'),
+              const _InfoChip(Icons.balance_outlined, 'License', 'GPL-3.0-or-later'),
+            ],
+          ),
+        ],
+      ),
+    );
+  }
+}
 
-                    sectionTitle("4. Recoverability via Reinstallation"),
-                    bullet("Users can reinstall the tool at any time and reintroduce the seed to reconstruct their files."),
-                    bullet("Seeds made by SLYS 1.x can still be used to rebuild files."),
-                  ],
-                ),
-              ),
-    ],
+class _InfoChip extends StatelessWidget {
+  final IconData icon;
+  final String label;
+  final String value;
+
+  const _InfoChip(this.icon, this.label, this.value);
+
+  @override
+  Widget build(BuildContext context) {
+    return Container(
+      padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
+      decoration: BoxDecoration(
+        color: AppTheme.lessGrey,
+        borderRadius: BorderRadius.circular(8),
+      ),
+      child: Row(
+        mainAxisSize: MainAxisSize.min,
+        children: [
+          Icon(icon, size: 18, color: AppTheme.accent),
+          const SizedBox(width: 8),
+          Column(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              Text(label, style: TextStyle(fontSize: 11, color: AppTheme.shadow)),
+              SelectableText(value,
+                  style: TextStyle(fontWeight: FontWeight.bold, color: AppTheme.white)),
+            ],
+          ),
+        ],
+      ),
+    );
+  }
+}
+
+class _Point extends StatelessWidget {
+  final IconData icon;
+  final String title;
+  final String text;
+
+  const _Point(this.icon, this.title, this.text);
+
+  @override
+  Widget build(BuildContext context) {
+    return Padding(
+      padding: const EdgeInsets.symmetric(vertical: 6),
+      child: Row(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Icon(icon, color: AppTheme.accent, size: 22),
+          const SizedBox(width: 12),
+          Expanded(
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                Text(title, style: TextStyle(fontWeight: FontWeight.bold, color: AppTheme.white)),
+                const SizedBox(height: 2),
+                Text(text, style: minitTextStyle()),
+              ],
+            ),
+          ),
+        ],
+      ),
+    );
+  }
+}
+
+Widget _whyCard() {
+  return AppCard(
+    title: 'Why',
+    child: Column(
+      children: const [
+        _Point(Icons.visibility_off_outlined, 'Your files, your control',
+            'Pieces are useless on their own: nobody can read them without your password.'),
+        _Point(Icons.vpn_key_outlined, 'Three things to rebuild',
+            'The pieces, the seed and the password. Lose one and the file is gone.'),
+        _Point(Icons.restore, 'Reinstall any time',
+            'Install SLYS again, enter the seed and the password, and your file is back.'),
+      ],
+    ),
   );
 }
 
-Widget ackTextBlock(){
-  final v = versionInfo();
-  final commit = v.commit == 'unknown' ? '' : ' · ${v.commit}';
-  return Column(
-    crossAxisAlignment: CrossAxisAlignment.start,
-    children: [
-      Text(
-        "SLYS ${v.version}$commit · seed format ${v.seedFormat}",
-        style: defaultTextStyle(),
-      ),
-      const SizedBox(height: 4),
-      Text(
-        "From: The Slys dev-team ♡",
-        style: defaultTextStyle(),
-      ),
-    ],
+Widget _featuresCard() {
+  return AppCard(
+    title: 'What it does',
+    child: Column(
+      children: const [
+        _Point(Icons.call_split, 'Fragments and encrypts',
+            'AES-256-GCM, with the key derived from your password using Argon2id.'),
+        _Point(Icons.fact_check_outlined, 'Detects any change',
+            'Edited, missing, reordered or swapped pieces are reported; nothing is rebuilt wrongly.'),
+        _Point(Icons.verified_outlined, 'Verifies before deleting',
+            'The original is removed only after the pieces are proven to rebuild it.'),
+        _Point(Icons.history, 'Reads old seeds',
+            'Seeds made by SLYS 1.x still work.'),
+        _Point(Icons.schedule, 'Planned',
+            'Optional wipe of the saved-seeds list after a period of inactivity.'),
+      ],
+    ),
   );
 }
 
+Widget _legalCard() {
+  return Material(
+    color: AppTheme.secondBackground,
+    shape: RoundedRectangleBorder(
+      borderRadius: BorderRadius.circular(12),
+      side: BorderSide(color: AppTheme.lessGrey),
+    ),
+    clipBehavior: Clip.antiAlias,
+    child: Theme(
+      data: ThemeData(dividerColor: Colors.transparent),
+      child: ExpansionTile(
+        iconColor: AppTheme.white,
+        collapsedIconColor: AppTheme.white,
+        tilePadding: const EdgeInsets.symmetric(horizontal: 16),
+        childrenPadding: const EdgeInsets.fromLTRB(16, 0, 16, 16),
+        title: Text('Legal notice',
+            style: TextStyle(fontSize: 19, fontWeight: FontWeight.bold, color: AppTheme.white)),
+        expandedCrossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Text(
+            'The SLYS platform provides a decentralized tool for fragmenting and reconstructing '
+            'sensitive information through the use of cryptographic keys.\n'
+            'It is the sole responsibility of the user to securely store and manage the keys '
+            'generated by the application.\n'
+            'Loss, accidental deletion, or mishandling of these keys may result in permanent loss '
+            'of access to the fragmented data.\n'
+            'Neither the development team nor the application shall be held liable for any damages, '
+            'data loss, or consequences arising from the mismanagement, loss, or deletion of the '
+            'keys by the user.\n'
+            'By using SLYS, you acknowledge and accept full responsibility for the preservation and '
+            'confidentiality of your cryptographic keys.',
+            style: minitTextStyle(),
+          ),
+        ],
+      ),
+    ),
+  );
+}
 
 Widget paypalButton() {
-  return Center(child: 
-              PayPalDonateButton(
-                donationUrl: "https://www.paypal.com/donate/?hosted_button_id=HKANXJYJZND7G",
-              ));
-}
-
-
-
-Widget legalNoticeBlock() {
-  return Column(
-    crossAxisAlignment: CrossAxisAlignment.start,
-    children: [
-      SectionHeader("Legal Notice"),
-      Text(
-        "The SLYS platform provides a decentralized tool for fragmenting and reconstructing sensitive information through the use of cryptographic keys.\n"
-        "It is the sole responsibility of the user to securely store and manage the keys generated by the application.\n"
-        "Loss, accidental deletion, or mishandling of these keys may result in permanent loss of access to the fragmented data.\n"
-        "Neither the development team nor the application shall be held liable for any damages, data loss, or consequences arising from the mismanagement, loss, or deletion of the keys by the user.\n"
-        "By using SLYS, you acknowledge and accept full responsibility for the preservation and confidentiality of your cryptographic keys.",
-        style: defaultTextStyle(),
-      ),
-    ],
+  return Center(
+    child: PayPalDonateButton(
+      donationUrl: "https://www.paypal.com/donate/?hosted_button_id=HKANXJYJZND7G",
+    ),
   );
 }
-

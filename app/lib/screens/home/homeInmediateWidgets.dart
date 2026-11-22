@@ -6,7 +6,6 @@ import '../../utils/app_styles.dart';
 import '../main/mainInmediateWidgets.dart';
 import '../tutorial/tutorial.dart';
 import '../settings/settings.dart';
-import '../../src/rust/api/version.dart';
 
 Widget getTabContent({
   required int selectedTabIndex,
@@ -70,39 +69,9 @@ Widget getTabContent({
       case 1:
         return _page(const SettingsScreen());
       case 2:
-        return _page(SingleChildScrollView(
-          padding: const EdgeInsets.all(16),
-          child: Column(children: [
-            Center(
-              child: Image.asset(
-                AppTheme.isDark ? 'assets/images/logQT.png' : 'assets/images/logQTINV.png',
-                height: 120,
-                fit: BoxFit.contain,
-              ),
-            ),
-            tutorialScreen(),
-          ]),
-        ));
+        return _page(tutorialScreen());
       case 3:
-        return _page(SingleChildScrollView(
-          padding: const EdgeInsets.all(16),
-          child: Column(
-            crossAxisAlignment: CrossAxisAlignment.start,
-            children: [
-              imageBlock(),
-              const SizedBox(height: 24),
-              whyTextBlock(),
-              const SizedBox(height: 26),
-              capabilitiesTextBlock(),
-              const SizedBox(height: 24),
-              ackTextBlock(),
-              const SizedBox(height: 24),
-              legalNoticeBlock(),
-              const SizedBox(height: 24),
-              paypalButton(),
-            ],
-          ),
-        ));
+        return _page(aboutScreen());
       default:
         return Container();
     }
@@ -116,13 +85,9 @@ Widget _page(Widget child) {
   );
 }
 
-/// Slim header: logo, name and version. It shrinks gracefully; there is no fake window bar,
-/// the operating system draws the real one.
+/// Slim header: logo and name. The version lives in About. There is no fake window bar, the
+/// operating system draws the real one.
 Widget appHeader() {
-  String version = '';
-  try {
-    version = 'v${versionInfo().version}';
-  } catch (_) {}
   return Container(
     width: double.infinity,
     padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 10),
@@ -143,7 +108,6 @@ Widget appHeader() {
             style: TextStyle(fontSize: 18, fontWeight: FontWeight.w600, color: AppTheme.white),
           ),
         ),
-        Text(version, style: minitTextStyle()),
       ],
     ),
   );

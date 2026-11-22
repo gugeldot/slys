@@ -61,10 +61,9 @@ void main() {
         await tester.tap(find.text(tab).first);
         await tester.pumpAndSettle();
         expect(tester.takeException(), isNull, reason: '$tab at ${e.key}');
+        await expectLater(
+            find.byType(MaterialApp), matchesGoldenFile('shots/${tab.toLowerCase()}_${e.key}.png'));
       }
-      await tester.tap(find.text('Settings').first);
-      await tester.pumpAndSettle();
-      await expectLater(find.byType(MaterialApp), matchesGoldenFile('shots/settings_${e.key}.png'));
     });
   }
 }

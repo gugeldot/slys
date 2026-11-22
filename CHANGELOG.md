@@ -36,6 +36,9 @@ Format: [Keep a Changelog](https://keepachangelog.com/). Versions follow [SemVer
   residual risks.
 
 ### Interface
+- About now holds the version (version, build commit, seed format, licence, with a button that copies them
+  for bug reports) and is much shorter; the legal notice is folded. The version is no longer in the header.
+- The tutorial is two illustrated step-by-step flows (fragment, rebuild) plus a reminder, instead of text.
 - Linux: the app prefers X11/XWayland. Flutter's Wayland path painted the UI at a quarter of the window
   on KDE Plasma with scaled monitors. `GDK_BACKEND=wayland` still forces Wayland.
 - Native window frame instead of the fake title bar; the layout adapts to any window size
