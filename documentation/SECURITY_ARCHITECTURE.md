@@ -154,7 +154,7 @@ policies). **N/A** = does not apply to a local, offline, single-user tool.
 | 6.x / 7.x | People / physical | Owner action | Organisational; outside this repository |
 | 8.4 | Access to source code | Owner action | Enable branch protection on `main` (required CI, review), 2FA for maintainers, signed commits |
 | 8.5 | Secure authentication | N/A | No accounts. Password handling per SR-6 |
-| 8.7 | Protection against malware | Partial | Checksums + provenance attestations now; code signing (SignPath) pending |
+| 8.7 | Protection against malware | Partial | Checksums + provenance attestations now; no code signing yet |
 | 8.8 | Technical vulnerability management | Done | `cargo-deny` on push and weekly; disclosure policy in `SECURITY.md` |
 | 8.9 | Configuration management | Done | Single version source, `Cargo.lock`, `deny.toml`, Flatpak manifest, `check-version.sh` in CI |
 | 8.10 | Information deletion | Partial | Verified, best-effort secure delete with documented limits; inactivity wipe (no UI yet) |

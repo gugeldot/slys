@@ -50,7 +50,7 @@ jobs:
             Copy-Item "C:\Windows\System32\$d" $rel
           }
       # Code signing: see documentation/SIGNING.md. Sign the .exe files before building the installer and
-      # the installer itself once a certificate (e.g. SignPath Foundation) is available.
+      # the installer itself once a certificate is available.
       - name: Installer (Inno Setup)
         shell: pwsh
         run: |

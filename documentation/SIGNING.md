@@ -7,7 +7,7 @@ Options, cheapest first:
 
 | Option | Cost | Notes |
 |---|---|---|
-| **SignPath Foundation** | free for open-source projects | Needs the repo to be public and a short application. Signs from CI via `signpath/github-action-submit-signing-request`. Recommended. |
+| **SignPath Foundation** | free for open-source projects | Needs the repo to be public and a short application. Signs from CI via `signpath/github-action-submit-signing-request`. The application was not accepted. |
 | **Azure Trusted Signing** | about 10 USD per month | Microsoft-run; individuals may be eligible depending on region. Signs from CI with `azure/trusted-signing-action`. |
 | Commercial OV certificate | roughly 100-300 USD per year | Works, but the private key must live on a hardware token or cloud HSM; harder in CI. |
 | EV certificate | more | No longer needed to avoid SmartScreen warnings as quickly as before; not worth it for this project. |
